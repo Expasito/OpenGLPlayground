@@ -53,13 +53,15 @@ int main() {
 		1,-1,0
 	};
 
+	int first[] = {0};
+	int count[] = {3};
+
 	glUseProgram(program);
 
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_DYNAMIC_DRAW);
 
 	glEnableVertexAttribArray(0);
-	checkErrors();
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -67,13 +69,15 @@ int main() {
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
+		glMultiDrawArrays(GL_TRIANGLES, first, count, 1);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 		std::cout << "hello\n";
 
 
+		checkErrors();
 
 	}
 
