@@ -10,6 +10,27 @@ void checkErrors() {
 	}
 }
 
+
+void framebuffer_size_callback(GLFWwindow* window, int width_, int height_) {
+
+	glViewport(0, 0, width_, height_);
+}
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+
+	//Render::left = glfwGetKey(window, GLFW_KEY_A);
+	//Render::right = glfwGetKey(window, GLFW_KEY_D);
+	//Render::forward = glfwGetKey(window, GLFW_KEY_W);
+	//Render::backward = glfwGetKey(window, GLFW_KEY_S);
+	//Render::up = glfwGetKey(window, GLFW_KEY_SPACE);
+	//Render::down = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+
+
+
+}
+
+
 char* loadShader(const char* filepath) {
 	FILE* fragment = fopen(filepath, "r");
 	int size = 100;

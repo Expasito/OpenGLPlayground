@@ -136,7 +136,6 @@
     <ClCompile Include="Depend\include\glm\detail\glm.cpp" />
     <ClCompile Include="Depend\include\Render\Camera.cpp" />
     <ClCompile Include="Depend\include\Render\glad.c" />
-    <ClCompile Include="Depend\include\Render\Render.cpp" />
     <ClCompile Include="Depend\include\Soil\image_DXT.c" />
     <ClCompile Include="Depend\include\Soil\image_helper.c" />
     <ClCompile Include="Depend\include\Soil\SOIL.c" />
@@ -586,7 +585,6 @@
     <ClInclude Include="Depend\include\KHR\khrplatform.h" />
     <ClInclude Include="Depend\include\Render\Camera.h" />
     <ClInclude Include="Depend\include\Render\Headers.h" />
-    <ClInclude Include="Depend\include\Render\Render.h" />
     <ClInclude Include="Depend\include\Render\utils\FillerArray.h" />
     <ClInclude Include="Depend\include\Render\utils\HashTable.h" />
     <ClInclude Include="Depend\include\Render\utils\Instances.h" />

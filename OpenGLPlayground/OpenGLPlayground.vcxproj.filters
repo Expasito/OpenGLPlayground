@@ -27,9 +27,6 @@
     <ClCompile Include="Depend\include\Render\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Depend\include\Render\Render.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Depend\include\Soil\image_DXT.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1360,9 +1357,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Depend\include\Render\Headers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Depend\include\Render\Render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Depend\include\Soil\image_DXT.h">
