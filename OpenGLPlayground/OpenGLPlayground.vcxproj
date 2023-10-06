@@ -595,6 +595,7 @@
     <ClInclude Include="Depend\include\Soil\stbi_DDS_aug.h" />
     <ClInclude Include="Depend\include\Soil\stbi_DDS_aug_c.h" />
     <ClInclude Include="Depend\include\Soil\stb_image_aug.h" />
+    <ClInclude Include="src\Includes.h" />
     <ClInclude Include="utils\Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

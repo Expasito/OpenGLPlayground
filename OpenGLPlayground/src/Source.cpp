@@ -1,43 +1,12 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/vec3.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
-#include "../utils/Utils.h"
-#include <glm/gtc/type_ptr.hpp>
+#include "Includes.h"
+const int width = 800;
+const int height = 800;
+
 
 
 int main() {
-	int width = 800;
-	int height = 800;
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	initRenderer(width, height);
 
-
-	GLFWwindow* window = glfwCreateWindow(width, height, "Game", NULL, NULL);
-	glfwMakeContextCurrent(window);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		printf("Failed to initalize GLAD\n");
-		return 1;
-	}
-
-	glViewport(0, 0, width, height);
-
-
-	// now load shaders
-	unsigned int program = compileShader("shaders/vertex0.shader", "shaders/fragment0.shader");
-
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-	glfwSetKeyCallback(window, key_callback);
-	//glfwSetCursorPosCallback(window, mouseCallBack);
-	//glfwSetMouseButtonCallback(window, mouseButtonCallBack);
-	//glfwSetScrollCallback(window, scrollCallBack);
 
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
@@ -48,57 +17,29 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, positions);
 
 	
-	float vertices[] = {
-		// front face
-		-1,-1,-1,
-		1,-1,-1,
-		0,1,-1,
 
-		// back face
-		-1,-1,1,
-		1,-1,1,
-		0,1,1,
-
-		// right face lower
-		1,-1,-1,
-		1,1,-1,
-		1,-1,1,
-		// right face upper
-		1,-1,1,
-		1,1,1,
-		1,-1,1
-
-	};
-
-	struct Triangle {
-		glm::vec3 p1;
-	};
-
-	//float data[] = {
-	//	-1,-1,0,
-	//	0,1,0,
-	//	1,-1,0
-	//};
 
 	int first[] = {0};
-	int count[] = {36};
+	int count[] = {35*3};
 
 	glUseProgram(program);
 
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+
+	glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_DYNAMIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 
-	glm::mat4 proj = glm::perspective(glm::radians(80.0f), 800.0f / 800.0f, .01f, 1000.0f);
+	glm::mat4 proj = glm::perspective(glm::radians(80.0f), (float)width/height, .01f, 1000.0f);
 	glm::mat4 view = glm::lookAt(glm::vec3(0, 1, 1), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
 
 	glm::mat4 trans(1);
-	glm::mat4 translate = glm::translate(trans, glm::vec3(.5, 0, 0));
-	glm::mat4 rotate = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0, 1, 0));
+	glm::mat4 translate = glm::translate(trans, glm::vec3(0, -4, 10));
+	glm::mat4 rotate = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0, 1, 0));
 
-	glm::mat4 model = rotate * translate;
+	glm::mat4 model = translate * rotate;
 
 	unsigned int projLoc, viewLoc, modelLoc;
 	projLoc = glGetUniformLocation(program, "projection");
@@ -107,11 +48,27 @@ int main() {
 
 	std::cout << "Proj: " << projLoc << " View: " << viewLoc << " Model: " << modelLoc << "\n";
 
+	float cntr = 0.001f;
+	
+	std::chrono::high_resolution_clock::time_point start;
+	std::chrono::high_resolution_clock::time_point end;
+
+
+
 	while (!glfwWindowShouldClose(window)) {
+		start = std::chrono::high_resolution_clock::now();
+
+
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		glBindBuffer(GL_ARRAY_BUFFER, positions);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+
+		rotate = glm::rotate(trans, glm::radians(cntr), glm::vec3(0, 1, 0));
+		cntr += .1;
+
+		model = translate * rotate;
 
 		
 		glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
@@ -121,13 +78,9 @@ int main() {
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glMultiDrawArrays(GL_TRIANGLES, first, count, 1);
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-		//std::cout << "hello\n";
 
-
-		checkErrors();
-
+		postRenderingSteps(window, &start, &proj, &view, width, height);
+		
 	}
 
 }

@@ -1,6 +1,85 @@
 #include "Utils.h"
 
 
+Camera camera(0, 0, -10);
+
+struct UserInput {
+	int leftArrow = 0;
+	int rightArrow = 0;
+	int upArrow = 0;
+	int downArrow = 0;
+
+	int W = 0, A = 0, S = 0, D = 0;
+	int leftShift = 0;
+	int leftControl = 0;
+	int space = 0;
+	
+	int leftMouseButton = 0;
+	int rightMouseButton = 0;
+	int middleMouseButton = 0;
+} userInput;
+
+
+float vertices[] = {
+
+	// Front face
+	-1,-1,-1,
+	-1,1,-1,
+	1,-1,-1,
+
+	-1,1,-1,
+	1,1,-1,
+	1,-1,-1,
+
+	// Back face
+	-1,-1,1,
+	-1,1,1,
+	1,-1,1,
+
+	-1,1,1,
+	1,1,1,
+	1,-1,1,
+
+	// Top face
+	-1,1,-1,
+	-1,1,1,
+	1,1,-1,
+
+	1,1,-1,
+	1,1,1,
+	-1,1,1,
+
+	// Bottom face
+	-1,-1,-1,
+	-1,-1,1,
+	1,-1,-1,
+
+	1,-1,-1,
+	1,-1,1,
+	-1,-1,1,
+
+	// Left face
+	-1,-1,-1,
+	-1,1,-1,
+	-1,-1,1,
+
+	-1,-1,1,
+	-1,1,1,
+	-1,1,-1,
+
+	// Right face
+	1,-1,-1,
+	1,1,-1,
+	1,-1,1,
+
+	1,-1,1,
+	1,1,1,
+	1,1,-1,
+};
+
+size_t verticesSize = sizeof(vertices);
+
+
 void checkErrors() {
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR) {
@@ -11,22 +90,116 @@ void checkErrors() {
 }
 
 
+void updateProjView(glm::mat4* proj, glm::mat4* view, int width, int height) {
+	*proj = glm::perspective(glm::radians(camera.fov), (float)width / height, .01f, 1000.0f);
+	*view = glm::lookAt(camera.cameraPos, camera.cameraPos + camera.cameraFront, glm::vec3(0, 1, 0));
+}
+
+GLFWwindow* window;
+unsigned int program;
+
+void initRenderer(int width, int height) {
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+
+	window = glfwCreateWindow(width, height, "Game", NULL, NULL);
+	glfwMakeContextCurrent(window);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		printf("Failed to initalize GLAD\n");
+		exit(1);
+	}
+
+
+
+	glViewport(0, 0, width, height);
+
+
+	// now load shaders
+	program = compileShader("shaders/vertex0.shader", "shaders/fragment0.shader");
+
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, mouseCallBack);
+	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
+	glfwSetScrollCallback(window, scrollCallBack);
+
+
+}
+
+
+
 void framebuffer_size_callback(GLFWwindow* window, int width_, int height_) {
 
 	glViewport(0, 0, width_, height_);
 }
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	//Render::left = glfwGetKey(window, GLFW_KEY_A);
-	//Render::right = glfwGetKey(window, GLFW_KEY_D);
-	//Render::forward = glfwGetKey(window, GLFW_KEY_W);
-	//Render::backward = glfwGetKey(window, GLFW_KEY_S);
-	//Render::up = glfwGetKey(window, GLFW_KEY_SPACE);
-	//Render::down = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+	userInput.A = glfwGetKey(window, GLFW_KEY_A);
+	userInput.D = glfwGetKey(window, GLFW_KEY_D);
+	userInput.W = glfwGetKey(window, GLFW_KEY_W);
+	userInput.S = glfwGetKey(window, GLFW_KEY_S);
+	userInput.space = glfwGetKey(window, GLFW_KEY_SPACE);
+	userInput.leftShift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 
 
+	
+}
+
+float lastFrame = 0;
+float dt = 0;
+
+void postRenderingSteps(GLFWwindow* window, 
+	std::chrono::time_point<std::chrono::high_resolution_clock>* start,
+
+	glm::mat4* proj, glm::mat4* view, int width, int height) {
+
+	float currentFrame = glfwGetTime();
+	dt = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+	camera.speed = camera.baseSpeed * dt;
+
+	glfwSwapBuffers(window);
+	glfwPollEvents();
+	checkErrors();
+	updateProjView(proj, view, width, height);
+
+	camera.translate(userInput.A, userInput.D, userInput.space, userInput.leftShift, userInput.W, userInput.S);
+
+	std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+	
+	float milis = (end - *start).count() / 1000000.0;
+	float fps = 1000.0 / milis;
+	std::cout << "Total Time difference = " << milis << "[ms]" << " FPS: " << fps << "\n";
+
+}
+
+void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		userInput.leftMouseButton = action;
+	}
+	if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+		userInput.middleMouseButton = action;
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+		userInput.rightMouseButton = action;
+	}
+
+}
+
+void mouseCallBack(GLFWwindow* window, double xpos, double ypos) {
+	camera.rotate(xpos, ypos, userInput.leftMouseButton);
+}
+
+void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset) {
+	camera.zoom(xoffset, yoffset);
 
 }
 
