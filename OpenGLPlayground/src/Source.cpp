@@ -53,6 +53,37 @@ int main() {
 	std::chrono::high_resolution_clock::time_point start;
 	std::chrono::high_resolution_clock::time_point end;
 
+	for (int i = 0; i < 35; i++) {
+		unsigned int texture0 = loadTexture("textures/GrassBlock.png",
+			GL_MIRRORED_REPEAT,
+			GL_MIRRORED_REPEAT,
+			GL_LINEAR_MIPMAP_LINEAR,
+			GL_LINEAR);
+
+		std::cout << "Texture: " << texture0 << "\n";
+		glBindTextureUnit(0, texture0);
+		checkErrors();
+		
+	}
+
+	
+
+
+	unsigned int texture1 = loadTexture("textures/Blood.png",
+		GL_MIRRORED_REPEAT,
+		GL_MIRRORED_REPEAT,
+		GL_LINEAR_MIPMAP_LINEAR,
+		GL_LINEAR);
+	checkErrors();
+
+	//exit(1);
+
+	int texture_units;
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
+
+
+	std::cout << "Texture units: " << texture_units << "\n";
+	//exit(1);
 
 
 	while (!glfwWindowShouldClose(window)) {

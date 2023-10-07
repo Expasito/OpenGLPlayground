@@ -1384,4 +1384,33 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\GrassBlock.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\OldRock.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\Rock.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\Sand.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\StonePath.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\Swamp.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\Water.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\Wood.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\WoodInside.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

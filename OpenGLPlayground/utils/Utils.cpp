@@ -1,6 +1,7 @@
 #include "Utils.h"
 
 
+
 Camera camera(0, 0, -10);
 
 struct UserInput {
@@ -87,6 +88,40 @@ void checkErrors() {
 		std::cout << err << "\n";
 		exit(1);
 	}
+}
+
+unsigned int loadTexture(const char* path,
+	unsigned int wrapS,
+	unsigned int wrapT,
+	unsigned int minFilter,
+	unsigned int magFilter) {
+	int width, height, channels;
+
+	// load the image using soil
+	unsigned char* data = SOIL_load_image(path, &width, &height, &channels, 0);
+
+
+	// if 4 channels, use rgba rather than rgb
+	unsigned int format = GL_RGB;
+	if (channels == 4) {
+		format = GL_RGBA;
+	}
+
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	// set up parameter options
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+
+	// set up the texture data and generate the mip maps
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	return texture;
 }
 
 

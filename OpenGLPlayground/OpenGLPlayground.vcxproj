@@ -598,6 +598,17 @@
     <ClInclude Include="src\Includes.h" />
     <ClInclude Include="utils\Utils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\GrassBlock.png" />
+    <Image Include="textures\OldRock.png" />
+    <Image Include="textures\Rock.png" />
+    <Image Include="textures\Sand.png" />
+    <Image Include="textures\StonePath.png" />
+    <Image Include="textures\Swamp.png" />
+    <Image Include="textures\Water.png" />
+    <Image Include="textures\Wood.png" />
+    <Image Include="textures\WoodInside.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

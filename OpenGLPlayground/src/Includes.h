@@ -12,3 +12,5 @@
 #include <chrono>
 
 #include "../Depend/include/Render/Camera.h"
+
+#include <Soil/SOIL.h>

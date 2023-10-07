@@ -25,6 +25,12 @@ void postRenderingSteps(GLFWwindow* window,
 	std::chrono::time_point<std::chrono::high_resolution_clock>* start,
 	glm::mat4* proj, glm::mat4* view, int width, int height);
 
+unsigned int loadTexture(const char* path,
+	unsigned int wrapS,
+	unsigned int wrapT,
+	unsigned int minFilter,
+	unsigned int magFilter);
+
 extern float vertices[];
 extern size_t verticesSize;
 extern GLFWwindow* window;
