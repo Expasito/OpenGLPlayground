@@ -9,3 +9,15 @@ Basically, I want to figure the best drawing method for Render Project without m
 <br>
 This will probably be a very messy repo since it is just for testing whatever. I would not look at this repo for my typical coding style, along with the Render Project repo for a bit while I get that fixed. <br>
 Hopefully, I will learn lots about how OpenGL draws things and about each drawing function and I probably will log my results in some files for future reference.
+
+
+<br>
+Here is a list of resources to remember for later: <br>
+https://i.stack.imgur.com/JgrSc.jpg <br>
+https://www.khronos.org/assets/uploads/developers/library/2013-siggraph-opengl-bof/Batch-and-Cull-in-OpenGL-BOF_SIGGRAPH-2013.pdf <br>
+https://www.nvidia.com/docs/IO/8228/BatchBatchBatch.pdf <br>
+https://on-demand.gputechconf.com/gtc/2014/presentations/S4379-opengl-44-scene-rendering-techniques.pdf <br>
+https://www.slideshare.net/CassEveritt/approaching-zero-driver-overhead <br>
+http://www.g-truc.net/post-0518.html <br>
+https://on-demand.gputechconf.com/gtc/2013/presentations/S3032-Advanced-Scenegraph-Rendering-Pipeline.pdf <br>
+
