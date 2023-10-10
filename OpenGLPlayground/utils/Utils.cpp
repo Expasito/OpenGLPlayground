@@ -11,6 +11,7 @@ struct UserInput {
 	int downArrow = 0;
 
 	int W = 0, A = 0, S = 0, D = 0;
+	int B = 0;
 	int leftShift = 0;
 	int leftControl = 0;
 	int space = 0;
@@ -88,6 +89,59 @@ void checkErrors() {
 		std::cout << err << "\n";
 		exit(1);
 	}
+}
+
+std::vector<float>* profileResults;
+int framesProfiled = 0;
+int maxFramesProfile = 0;
+long totalFrames = 0;
+bool shouldProfile = false;
+
+void initProfile(int numFrames, bool startProfile) {
+	profileResults = new std::vector<float>();
+	profileResults->reserve(numFrames);
+	maxFramesProfile = numFrames;
+	totalFrames = 0;
+	shouldProfile = startProfile;
+}
+
+void profileFrame(float milis) {
+	totalFrames++;
+	if (shouldProfile && (framesProfiled < maxFramesProfile)) {
+		profileResults->push_back(milis);
+		framesProfiled++;
+	}
+
+}
+
+void logProfile() {
+	float longest = INT_MIN;
+	float shortest = INT_MAX;
+	float sum = 0;
+	float mean = 0;
+	for (int i = 0; i < profileResults->size(); i++) {
+		float temp = profileResults->at(i);
+		if (temp > longest) {
+			longest = temp;
+		}
+		if (temp < shortest) {
+			shortest = temp;
+		}
+		sum += temp;
+	}
+	mean = sum / profileResults->size();
+	std::cout << "=========================================\n";
+	std::cout << "Profile Information: \n";
+	std::cout << "     Frames Profiled: " << framesProfiled << "\n";
+	std::cout << "     Max Frames: " << maxFramesProfile << "\n";
+	std::cout << "     Total Frames Rendered: " << totalFrames << "\n";
+	std::cout << "     % of Reserved Frames Profiled: " << framesProfiled / (float)maxFramesProfile * 100 << "\n";
+	std::cout << "     % of Rendered Frames Profiled: " << framesProfiled / (float)totalFrames*100 << "\n";
+	printf_s("     Longest Frame:    %10.4f [ms], %7.1f [FPS]\n", longest, 1000.0 / longest);
+	printf_s("     Shortest Frame:   %10.4f [ms], %7.1f [FPS]\n", shortest, 1000.0 / shortest);
+	printf_s("     Mean Frame:       %10.4f [ms], %7.1f [FPS]\n", mean, 1000.0 / mean);
+	std::cout << "=========================================\n";
+
 }
 
 unsigned int loadTexture(const char* path,
@@ -184,6 +238,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	userInput.space = glfwGetKey(window, GLFW_KEY_SPACE);
 	userInput.leftShift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 
+	userInput.B = glfwGetKey(window, GLFW_KEY_B);
+
 
 	
 }
@@ -208,11 +264,28 @@ void postRenderingSteps(GLFWwindow* window,
 
 	camera.translate(userInput.A, userInput.D, userInput.space, userInput.leftShift, userInput.W, userInput.S);
 
+	if (userInput.B == 1) {
+		shouldProfile = true;
+	}
+	/*else {
+		shouldProfile = false;
+	}*/
+
 	std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 	
 	float milis = (end - *start).count() / 1000000.0;
 	float fps = 1000.0 / milis;
 	std::cout << "Total Time difference = " << milis << "[ms]" << " FPS: " << fps << "\n";
+
+	profileFrame(milis);
+
+}
+
+void cleanup() {
+	logProfile();
+	if (profileResults == NULL) {
+		delete profileResults;
+	}
 
 }
 

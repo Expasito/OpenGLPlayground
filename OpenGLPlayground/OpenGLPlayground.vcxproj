@@ -609,6 +609,9 @@
     <Image Include="textures\Wood.png" />
     <Image Include="textures\WoodInside.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="utils\Results.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

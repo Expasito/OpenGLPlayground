@@ -6,6 +6,8 @@ const int height = 800;
 
 int main() {
 	initRenderer(width, height);
+	glUseProgram(program);
+
 
 
 	unsigned int VAO;
@@ -16,26 +18,23 @@ int main() {
 	glGenBuffers(1, &positions);
 	glBindBuffer(GL_ARRAY_BUFFER, positions);
 
-	
-
-
 	int first[] = {0};
 	int count[] = {35*3};
 
-	glUseProgram(program);
-
-
-
-
 	glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_DYNAMIC_DRAW);
-
 	glEnableVertexAttribArray(0);
+
+	glm::mat4 trans(1);
+	std::vector<glm::mat4> translations;
+	for (int i = 0; i < 1000000; i++) {
+		translations.push_back(glm::translate(trans, glm::vec3(i, 0, 0)));
+
+	}
 
 	glm::mat4 proj = glm::perspective(glm::radians(80.0f), (float)width/height, .01f, 1000.0f);
 	glm::mat4 view = glm::lookAt(glm::vec3(0, 1, 1), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
 
-	glm::mat4 trans(1);
 	glm::mat4 translate = glm::translate(trans, glm::vec3(0, -4, 10));
 	glm::mat4 rotate = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0, 1, 0));
 
@@ -81,13 +80,15 @@ int main() {
 	int texture_units;
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
 
-
 	std::cout << "Texture units: " << texture_units << "\n";
-	//exit(1);
 
+	int elements = 0;
+
+	initProfile(10000, false);
 
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
+		elements = 0;
 
 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -96,22 +97,28 @@ int main() {
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
-		rotate = glm::rotate(trans, glm::radians(cntr), glm::vec3(0, 1, 0));
-		cntr += .1;
+		//rotate = glm::rotate(trans, glm::radians(cntr), glm::vec3(0, 1, 0));
+		//cntr += .1;
 
-		model = translate * rotate;
+		for (int i = 0; i < translations.size(); i++) {
+			//model = translations.at(i) * rotate;
+			model = translations.at(i);
+
+			glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
+			glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
+			glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
+
+			glMultiDrawArrays(GL_TRIANGLES, first, count, 1);
+			elements++;
+		}
 
 		
-		glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
-		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
-		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
 
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glMultiDrawArrays(GL_TRIANGLES, first, count, 1);
-
-
+		std::cout << "Elements drawn: " << elements << "    ";
 		postRenderingSteps(window, &start, &proj, &view, width, height);
 		
 	}
+
+	cleanup();
 
 }

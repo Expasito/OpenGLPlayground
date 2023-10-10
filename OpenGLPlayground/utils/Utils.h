@@ -25,6 +25,10 @@ void postRenderingSteps(GLFWwindow* window,
 	std::chrono::time_point<std::chrono::high_resolution_clock>* start,
 	glm::mat4* proj, glm::mat4* view, int width, int height);
 
+void initProfile(int numFrames, bool startProfile);
+
+void cleanup();
+
 unsigned int loadTexture(const char* path,
 	unsigned int wrapS,
 	unsigned int wrapT,
