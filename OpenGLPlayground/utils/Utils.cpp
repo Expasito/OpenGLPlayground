@@ -76,10 +76,58 @@ float vertices[] = {
 
 	1,-1,1,
 	1,1,1,
-	1,1,-1,
+	1,1,-1
 };
 
+
+
+
+
 size_t verticesSize = sizeof(vertices);
+
+//float* vertexData;
+std::vector<glm::vec3> vertexData;
+int vertexDataSize = 0;
+
+unsigned int* indexData;
+int indexDataSize = 0;
+
+int vectorContains(std::vector<glm::vec3>* v, glm::vec3 element) {
+	for (int i = 0; i < v->size(); i++) {
+		glm::vec3 temp = v->at(i);
+		if (temp == element) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void makeIBO() {
+	indexData = (unsigned int*)malloc(sizeof(unsigned int) * 100);
+	std::cout << "NUM VERTICES: " << verticesSize / sizeof(float) << "\n";
+	for (int i = 0; i < verticesSize / sizeof(float); i+=3) {
+		float f1 = vertices[i];
+		float f2 = vertices[i + 1];
+		float f3 = vertices[i + 2];
+		//std::cout << "" << f1 << ", " << f2 << ", " << f3 << "\n";
+		glm::vec3 temp = { f1,f2,f3 };
+		int index = vectorContains(&vertexData, temp);
+		// if in the array, set the ibo to the index
+		if (index >= 0) {
+			indexData[indexDataSize] = index;
+			indexDataSize++;
+		}
+		// not in the array
+		else {
+			vertexData.push_back(temp);
+			indexData[indexDataSize] = vertexData.size()-1;
+			indexDataSize++;
+		}
+
+	}
+
+}
+
 
 
 void checkErrors() {
@@ -97,19 +145,29 @@ int maxFramesProfile = 0;
 long totalFrames = 0;
 bool shouldProfile = false;
 
-void initProfile(int numFrames, bool startProfile) {
+// allow for waiting a few frames before profiling
+int framesToWait = 0;
+int framesWaited = 0;
+
+void initProfile(int waitFrames, int numFrames, bool startProfile) {
 	profileResults = new std::vector<float>();
 	profileResults->reserve(numFrames);
 	maxFramesProfile = numFrames;
 	totalFrames = 0;
 	shouldProfile = startProfile;
+	framesToWait = waitFrames;
+	framesWaited = 0;
 }
 
 void profileFrame(float milis) {
 	totalFrames++;
 	if (shouldProfile && (framesProfiled < maxFramesProfile)) {
-		profileResults->push_back(milis);
-		framesProfiled++;
+		framesWaited++;
+		if (framesWaited > framesToWait) {
+			profileResults->push_back(milis);
+			framesProfiled++;
+		}
+		
 	}
 
 }
@@ -247,9 +305,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 float lastFrame = 0;
 float dt = 0;
 
-void postRenderingSteps(GLFWwindow* window, 
+void postRenderingSteps(bool log, GLFWwindow* window, 
 	std::chrono::time_point<std::chrono::high_resolution_clock>* start,
-
 	glm::mat4* proj, glm::mat4* view, int width, int height) {
 
 	float currentFrame = glfwGetTime();
@@ -267,15 +324,17 @@ void postRenderingSteps(GLFWwindow* window,
 	if (userInput.B == 1) {
 		shouldProfile = true;
 	}
-	/*else {
-		shouldProfile = false;
-	}*/
 
 	std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 	
 	float milis = (end - *start).count() / 1000000.0;
 	float fps = 1000.0 / milis;
-	std::cout << "Total Time difference = " << milis << "[ms]" << " FPS: " << fps << "\n";
+
+	// give option to save time from writing to the console
+	if (log) {
+		std::cout << "Total Time difference = " << milis << "[ms]" << " FPS: " << fps << "\n";
+
+	}
 
 	profileFrame(milis);
 

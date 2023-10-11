@@ -18,15 +18,48 @@ int main() {
 	glGenBuffers(1, &positions);
 	glBindBuffer(GL_ARRAY_BUFFER, positions);
 
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
 	int first[] = {0};
-	int count[] = {35*3};
+	int count[] = {indexDataSize};
 
 	glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_DYNAMIC_DRAW);
+
+	unsigned int test[] = {
+		0,1,2,3,4,5,6,7,8,9,10,11,12
+	};
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(test), test, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 
+
+	glm::vec3 a = { 2,3,4 };
+	glm::vec3 b = { 2,3,4 };
+	std::cout << (a == b) << "\n";
+
+	makeIBO();
+
+	std::cout << "Vertex Data\n";
+	for (int i = 0; i < vertexData.size(); i++) {
+		glm::vec3 temp = vertexData.at(i);
+		std::cout << "" << temp.x << ", " << temp.y << ", " << temp.z << "\n";
+	}
+	std::cout << "\nIBO Data:\n";
+	for (int i = 0; i < indexDataSize; i++) {
+		std::cout << indexData[i] << "\n";
+	}
+
+	//exit(1);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indexDataSize, indexData, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertexData.size(), &vertexData[0], GL_DYNAMIC_DRAW);
+
+	std::cout << indexDataSize << "\n";
+	//exit(1);
 	glm::mat4 trans(1);
 	std::vector<glm::mat4> translations;
-	for (int i = 0; i < 1000000; i++) {
+	for (int i = 0; i < 1; i++) {
 		translations.push_back(glm::translate(trans, glm::vec3(i, 0, 0)));
 
 	}
@@ -59,7 +92,7 @@ int main() {
 			GL_LINEAR_MIPMAP_LINEAR,
 			GL_LINEAR);
 
-		std::cout << "Texture: " << texture0 << "\n";
+		//std::cout << "Texture: " << texture0 << "\n";
 		glBindTextureUnit(0, texture0);
 		checkErrors();
 		
@@ -84,7 +117,12 @@ int main() {
 
 	int elements = 0;
 
-	initProfile(10000, false);
+	initProfile(10,10000, true);
+
+	glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
+
+	GLsizei counts[] = { indexDataSize};
+	GLvoid* starts[] = { (GLvoid*)0};
 
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
@@ -99,23 +137,30 @@ int main() {
 
 		//rotate = glm::rotate(trans, glm::radians(cntr), glm::vec3(0, 1, 0));
 		//cntr += .1;
+		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 		for (int i = 0; i < translations.size(); i++) {
 			//model = translations.at(i) * rotate;
 			model = translations.at(i);
 
-			glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
-			glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 			glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
 
-			glMultiDrawArrays(GL_TRIANGLES, first, count, 1);
+
+			//glMultiDrawArrays(GL_TRIANGLES, first, count, 1);
+			//glDrawElements(GL_TRIANGLES, count[0], GL_UNSIGNED_INT, NULL);
+			//glDrawElements(GL_TRIANGLES, indexDataSize, GL_UNSIGNED_INT, NULL);
+			//glMultiDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, (const void*const*)indexData, 1);
+			// This needs to be changed to be outside of the loop and have the loop assemble a vbo 
+			glMultiDrawElements(GL_TRIANGLES, counts, GL_UNSIGNED_INT, (const void**)(starts), 1);
+			checkErrors();
+
 			elements++;
 		}
 
 		
 
-		std::cout << "Elements drawn: " << elements << "    ";
-		postRenderingSteps(window, &start, &proj, &view, width, height);
+		//std::cout << "Elements drawn: " << elements << "\n";
+		postRenderingSteps(false, window, &start, &proj, &view, width, height);
 		
 	}
 
