@@ -29,7 +29,12 @@ void postRenderingSteps(bool log, GLFWwindow* window,
 
 void initProfile(int waitFrames,int numFrames, bool startProfile);
 
-void makeIBO();
+void makeIBO(float* vertices, uint32_t verticesSize,
+	std::vector<glm::vec3>* vertexData,
+	std::vector<uint32_t>* indexData);
+
+// this generates random vertices
+void genVerts2(int, int);
 
 
 void cleanup();
@@ -45,7 +50,11 @@ extern size_t verticesSize;
 extern GLFWwindow* window;
 extern unsigned int program;
 
-extern std::vector<glm::vec3> vertexData;
-extern int vertexDataSize;
-extern unsigned int* indexData;
-extern int indexDataSize;
+
+extern glm::vec3* verts2;
+extern int verts2Size;
+extern unsigned int* indices2;
+extern int indices2Size;
+
+extern float cubeVertices[];
+extern size_t cubeVertsSize;

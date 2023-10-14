@@ -140,6 +140,7 @@
     <ClCompile Include="Depend\include\Soil\image_helper.c" />
     <ClCompile Include="Depend\include\Soil\SOIL.c" />
     <ClCompile Include="Depend\include\Soil\stb_image_aug.c" />
+    <ClCompile Include="utils\Mesh.cpp" />
     <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="utils\Utils.cpp" />
   </ItemGroup>
@@ -284,6 +285,7 @@
     <None Include="Depend\include\glm\gtx\vector_query.inl" />
     <None Include="Depend\include\glm\gtx\wrap.inl" />
     <None Include="Depend\lib\glfw3.dll" />
+    <None Include="models\thing.in" />
     <None Include="shaders\fragment0.shader" />
     <None Include="shaders\vertex0.shader" />
   </ItemGroup>
@@ -595,6 +597,7 @@
     <ClInclude Include="Depend\include\Soil\stbi_DDS_aug.h" />
     <ClInclude Include="Depend\include\Soil\stbi_DDS_aug_c.h" />
     <ClInclude Include="Depend\include\Soil\stb_image_aug.h" />
+    <ClInclude Include="utils\Mesh.h" />
     <ClInclude Include="src\Includes.h" />
     <ClInclude Include="utils\Utils.h" />
   </ItemGroup>

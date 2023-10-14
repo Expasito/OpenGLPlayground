@@ -8,6 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include "../utils/Utils.h"
+#include "../utils/Mesh.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <chrono>
 

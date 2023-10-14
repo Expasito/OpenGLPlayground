@@ -22,7 +22,96 @@ struct UserInput {
 } userInput;
 
 
+glm::vec3* verts2;
+int verts2Size = 0;
 
+unsigned int* indices2;
+int indices2Size = 0;
+
+void genVerts2(int points, int displacement) {
+	// make it so points is a multiple of 3
+	points = points / 3 * 3;
+	verts2 = (glm::vec3*)malloc(sizeof(glm::vec3) * points);
+	indices2 = (unsigned int*)malloc(sizeof(unsigned int) * points);
+	verts2Size = 0;
+
+	for (int i = 0; i < points; i++) {
+		float f1 = rand() % displacement;
+		float f2 = rand() % displacement;
+		float f3 = rand() % displacement;
+
+		glm::vec3 temp = { f1,f2,f3 };
+		short found = -1;
+		for (int j = 0; j < verts2Size; j++) {
+			glm::vec3 temp_ = verts2[j];
+			if (temp == temp_) {
+				found = j;
+				//std::cout << "DUPLICATE!!\n";
+			}
+
+		}
+		if (found >=0) {
+			indices2[i] = found;
+			indices2Size++;
+			//verts2Size++;
+		}
+		else {
+			verts2[verts2Size++] = temp;
+			indices2[i] = indices2Size;
+			indices2Size++;
+
+		}
+		//verts2Size++;
+	}
+
+
+}
+
+float cubeVertices[] = {
+	-1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
+	 1.0f, -1.0f, -1.0f,  1.0f, 0.0f,
+	 1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+	 1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+	-1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
+	-1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
+
+	-1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+	 1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
+	 1.0f,  1.0f,  1.0f,  1.0f, 1.0f,
+	 1.0f,  1.0f,  1.0f,  1.0f, 1.0f,
+	-1.0f,  1.0f,  1.0f,  0.0f, 1.0f,
+	-1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+
+	-1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+	-1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+	-1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+	-1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+	-1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+
+	 1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+	 1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+	 1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+	 1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+	 1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+
+	-1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+	 1.0f, -1.0f, -1.0f,  1.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
+	 1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
+	-1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+	-1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+
+	-1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
+	 1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+	 1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+	 1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f,  1.0f,  0.0f, 0.0f,
+	-1.0f,  1.0f, -1.0f,  0.0f, 1.0f
+};
+
+size_t cubeVertsSize = sizeof(cubeVertices);
 
 
 float vertices[] = {
@@ -88,13 +177,6 @@ float vertices[] = {
 
 size_t verticesSize = sizeof(vertices);
 
-//float* vertexData;
-std::vector<glm::vec3> vertexData;
-int vertexDataSize = 0;
-
-unsigned int* indexData;
-int indexDataSize = 0;
-
 int vectorContains(std::vector<glm::vec3>* v, glm::vec3 element) {
 	for (int i = 0; i < v->size(); i++) {
 		glm::vec3 temp = v->at(i);
@@ -105,26 +187,31 @@ int vectorContains(std::vector<glm::vec3>* v, glm::vec3 element) {
 	return -1;
 }
 
-void makeIBO() {
-	indexData = (unsigned int*)malloc(sizeof(unsigned int) * 100);
-	std::cout << "NUM VERTICES: " << verticesSize / sizeof(float) << "\n";
-	for (int i = 0; i < verticesSize / sizeof(float); i+=3) {
+/*
+* 
+* makeIBO takes in a pointer to a float array along with the number of elements
+* and then edits the two vectors so they have the index and vertex data
+* 
+*/
+void makeIBO(float* vertices, uint32_t verticesSize,
+	std::vector<glm::vec3>* vertexData,
+	std::vector<uint32_t>* indexData) {
+	std::cout << "NUM VERTICES: " << verticesSize  << "\n";
+	for (int i = 0; i < verticesSize; i+=3) {
 		float f1 = vertices[i];
 		float f2 = vertices[i + 1];
 		float f3 = vertices[i + 2];
 		//std::cout << "" << f1 << ", " << f2 << ", " << f3 << "\n";
 		glm::vec3 temp = { f1,f2,f3 };
-		int index = vectorContains(&vertexData, temp);
+		int index = vectorContains(vertexData, temp);
 		// if in the array, set the ibo to the index
 		if (index >= 0) {
-			indexData[indexDataSize] = index;
-			indexDataSize++;
+			indexData->push_back(index);
 		}
 		// not in the array
 		else {
-			vertexData.push_back(temp);
-			indexData[indexDataSize] = vertexData.size()-1;
-			indexDataSize++;
+			vertexData->push_back(temp);
+			indexData->push_back(vertexData->size() - 1);
 		}
 
 	}
@@ -277,6 +364,8 @@ void initRenderer(int width, int height) {
 	glfwSetCursorPosCallback(window, mouseCallBack);
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
 	glfwSetScrollCallback(window, scrollCallBack);
+
+	camera.baseSpeed = 10;
 
 
 }

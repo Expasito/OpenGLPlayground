@@ -42,6 +42,9 @@
     <ClCompile Include="utils\Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="utils\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Depend\lib\glfw3.dll" />
@@ -464,6 +467,7 @@
     </None>
     <None Include="shaders\vertex0.shader" />
     <None Include="shaders\fragment0.shader" />
+    <None Include="models\thing.in" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Depend\lib\glfw3.lib" />
@@ -1381,6 +1385,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Includes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
