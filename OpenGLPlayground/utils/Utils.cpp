@@ -204,15 +204,20 @@ void makeIBO(float* vertices, uint32_t verticesSize,
 		//std::cout << "" << f1 << ", " << f2 << ", " << f3 << "\n";
 		glm::vec3 temp = { f1,f2,f3 };
 		int index = vectorContains(vertexData, temp);
-		// if in the array, set the ibo to the index
-		if (index >= 0) {
-			indexData->push_back(index);
-		}
-		// not in the array
-		else {
-			vertexData->push_back(temp);
-			indexData->push_back(vertexData->size() - 1);
-		}
+
+		// just add regardless
+		vertexData->push_back(temp);
+		indexData->push_back(vertexData->size()-1);
+
+		//// if in the array, set the ibo to the index
+		//if (index >= 0) {
+		//	indexData->push_back(index);
+		//}
+		//// not in the array
+		//else {
+		//	vertexData->push_back(temp);
+		//	indexData->push_back(vertexData->size());
+		//}
 
 	}
 

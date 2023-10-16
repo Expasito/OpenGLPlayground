@@ -8,6 +8,11 @@ int main() {
 	initRenderer(width, height);
 	glUseProgram(program);
 
+	// create our VAO
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
 	Mesh mesh;
 
 	float v[] = {
@@ -25,10 +30,7 @@ int main() {
 	mesh.loadMeshData(v, sizeof(v)/sizeof(float), i, sizeof(i) / sizeof(unsigned int));
 
 
-	// create our VAO
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	
 
 	// create our vertex position buffer
 	unsigned int verticesBuffer;
@@ -48,7 +50,23 @@ int main() {
 
 	Mesh mesh2;
 
-	mesh2.loadMeshData(&verts, &inds);
+	//mesh2.loadMeshData(&verts, &inds);
+
+	float verts_[] = {
+		-1,-1,-1,
+		-1,1,-1,
+		1,-1,-1
+	};
+
+	unsigned int inds_[] = {
+		0,1,2
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts.size(), glm::value_ptr(verts[0]), GL_DYNAMIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
 
 	int first[] = {0};
 	int count[] = {inds.size()};
@@ -61,15 +79,18 @@ int main() {
 
 
 
-	//std::cout << "Vertex Data\n";
-	//for (int i = 0; i < vertexData.size(); i++) {
-	//	glm::vec3 temp = vertexData.at(i);
-	//	std::cout << "" << temp.x << ", " << temp.y << ", " << temp.z << "\n";
-	//}
-	//std::cout << "\nIBO Data:\n";
-	//for (int i = 0; i < indexDataSize; i++) {
-	//	std::cout << indexData[i] << "\n";
-	//}
+	std::cout << "Vertex Data\n";
+	for (int i = 0; i < verts.size(); i++) {
+		glm::vec3 temp = verts.at(i);
+		std::cout << "" << temp.x << ", " << temp.y << ", " << temp.z << "\n";
+	}
+	std::cout << "\nIBO Data:\n";
+	for (int i = 0; i < inds.size(); i++) {
+		std::cout << inds[i] << "\n";
+	}
+
+	std::cout << inds.size() << "\n";
+	//exit(1);
 
 	//std::cout << "SEcond thing\n";
 	//std::cout << "Vertex Data\n";
@@ -258,7 +279,7 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-		glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, inds.size(), GL_UNSIGNED_INT, 0);
 
 		
 
