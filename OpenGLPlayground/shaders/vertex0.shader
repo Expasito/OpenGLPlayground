@@ -14,7 +14,7 @@ out int draw;
 
 void main() {
 	draw = gl_DrawID;
-	//gl_Position = projection * view * model * vec4(pos, 1);
-	gl_Position = projection * view * models[gl_DrawID] * vec4(pos, 1);
+	gl_Position = projection * view * model * vec4(pos, 1);
+	//gl_Position = projection * view * models[gl_DrawID] * vec4(pos, 1);
 
 }

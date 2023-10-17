@@ -13,23 +13,6 @@ int main() {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	Mesh mesh;
-
-	float v[] = {
-		-1,-1,-1,
-		1,-1,-1,
-		0,1,1,
-		1,1,1,
-		1,0,1
-	};
-
-	unsigned int i[] = {
-		0,1,2
-	};
-
-	mesh.loadMeshData(v, sizeof(v)/sizeof(float), i, sizeof(i) / sizeof(unsigned int));
-
-
 	
 
 	// create our vertex position buffer
@@ -50,78 +33,48 @@ int main() {
 
 	Mesh mesh2;
 
-	//mesh2.loadMeshData(&verts, &inds);
+	std::vector<glm::vec3>* verts_ = &verts;
+	std::vector<uint32_t>* inds_ = &inds;
 
-	float verts_[] = {
-		-1,-1,-1,
-		-1,1,-1,
-		1,-1,-1
-	};
+	mesh2.loadMeshData(&verts, &inds);
+	//glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts.size(), glm::value_ptr(verts[0]), GL_DYNAMIC_DRAW);
 
-	unsigned int inds_[] = {
-		0,1,2
-	};
+	//glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts_->size(), glm::value_ptr((*verts_)[0]), GL_DYNAMIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts.size(), glm::value_ptr(verts[0]), GL_DYNAMIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
 
-	int first[] = {0};
-	int count[] = {inds.size()};
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * inds_->size(), &(*inds_)[0], GL_DYNAMIC_DRAW);
 
-	glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_DYNAMIC_DRAW);
+
+
+	std::vector<glm::vec3> verts2;
+	verts2.push_back({ -1, -1, -1 });
+	verts2.push_back({ -1,1,-1 });
+	verts2.push_back({ 1,-1,-1 });
+
+	std::vector<uint32_t> inds2;
+	inds2.push_back(0);
+	inds2.push_back(1);
+	inds2.push_back(2);
+
+	Mesh mesh;
+	
+	mesh.loadMeshData(&verts2, &inds2);
+
+
+
+
 
 	glEnableVertexAttribArray(0);
 
-	genVerts2(3*1000,2000);
 
 
 
-	std::cout << "Vertex Data\n";
-	for (int i = 0; i < verts.size(); i++) {
-		glm::vec3 temp = verts.at(i);
-		std::cout << "" << temp.x << ", " << temp.y << ", " << temp.z << "\n";
-	}
-	std::cout << "\nIBO Data:\n";
-	for (int i = 0; i < inds.size(); i++) {
-		std::cout << inds[i] << "\n";
-	}
-
-	std::cout << inds.size() << "\n";
-	//exit(1);
-
-	//std::cout << "SEcond thing\n";
-	//std::cout << "Vertex Data\n";
-	//for (int i = 0; i < verts2Size; i++) {
-	//	glm::vec3 temp = verts2[i];
-	//	std::cout << "" << temp.x << ", " << temp.y << ", " << temp.z << "\n";
-	//}
-	//std::cout << "\nIBO Data:\n";
-	//for (int i = 0; i < indices2Size; i++) {
-	//	std::cout << indices2[i] << "\n";
-	//}
-
-
-	unsigned int v2, ibo2;
-	glGenBuffers(1, &v2);
-	glGenBuffers(1, &ibo2);
-
-	glBindBuffer(GL_ARRAY_BUFFER, v2);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts2Size, verts2, GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo2);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices2Size, indices2, GL_DYNAMIC_DRAW);
-
-	checkErrors();
-
-
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts.size(), glm::value_ptr(verts[0]), GL_DYNAMIC_DRAW);
 
 	glm::mat4 trans(1);
 
@@ -275,11 +228,23 @@ int main() {
 
 		//}
 
+		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, {1,2,1})));
+
+
 
 		glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-		glDrawElements(GL_TRIANGLES, inds.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
+
+
+		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { -4,2,1 })));
+
+
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+		glDrawElements(GL_TRIANGLES, mesh.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 		
 
@@ -289,7 +254,6 @@ int main() {
 
 		//std::cout << "Triangles: " << triangles << "\n";
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);
-		
 	}
 
 	cleanup();
