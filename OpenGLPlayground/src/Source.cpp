@@ -2,11 +2,24 @@
 const int width = 800;
 const int height = 800;
 
+struct Material {
+	uint32_t texture;
+	glm::vec3 albedo;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+};
+
+
+struct Model {
+	std::vector<Mesh> components;
+};
+
 
 
 int main() {
 	initRenderer(width, height);
 	glUseProgram(program);
+	
 
 	// create our VAO
 	unsigned int VAO;
@@ -71,6 +84,7 @@ int main() {
 
 
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
 
 
@@ -171,6 +185,29 @@ int main() {
 	GLsizei c[] = { 3, 3, 3 };
 	GLvoid* s[] = { (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5)};
 
+	// no texturing
+	glUniform1i(glGetUniformLocation(program, "texturing"), 0);
+
+	uint32_t textureCoords;
+	float textureCoordsArray[] = {
+		0, 0,
+		0, 1,
+		1, 0,
+		1,1,
+		0,1,
+		1,1,
+		0,0,
+		1,0,
+		1,1,
+		0,1,
+	};
+	glGenBuffers(1, &textureCoords);
+	glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoordsArray), textureCoordsArray, GL_STATIC_DRAW);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthMask(GL_TRUE);
+	//glDepthFunc(GL_LESS);
+	//glDisable(GL_DEPTH_TEST);
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
 
@@ -181,52 +218,13 @@ int main() {
 
 
 		// clear the buffer
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_COLOR_BUFFER_BIT);
+
 
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
-		//// bind vbo and ebo
-		//glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	
-		//// send data over
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-
-		//objects += models_.size();
-
-		//glMultiDrawElements(GL_TRIANGLES, counts, GL_UNSIGNED_INT, (const void**)(starts), 3);
-		//drawCalls++;
-
-		//glBindBuffer(GL_ARRAY_BUFFER, v2);
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo2);
-
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-
-		//glMultiDrawElements(GL_TRIANGLES, counts2, GL_UNSIGNED_INT, (const void**)starts2, 3);
-		//drawCalls++;
-
-		//glMultiDrawElements(GL_TRIANGLES, counts2, GL_UNSIGNED_INT, (const void**)starts2, 1);
-		//drawCalls++;
-
-		//glMultiDrawElements(GL_TRIANGLES, counts2, GL_UNSIGNED_INT, (const void**)starts2, 1);
-		//drawCalls++;
-
-		//checkErrors();
-
-
-		
-
-		//// simulate a different batch with different buffer objects
-		//for (int batch = 0; batch < 100000; batch++) {
-		//	glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
-		//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-
-		//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
-
-		//	//glDrawElements(GL_TRIANGLES, mesh.indicesBufferSize, GL_UNSIGNED_INT, 0);
-		//	glMultiDrawElements(GL_TRIANGLES, c, GL_UNSIGNED_INT, s, 3);
-
-		//}
 
 		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, {1,2,1})));
 
@@ -235,6 +233,10 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
 		glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 
@@ -244,6 +246,10 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
 		glDrawElements(GL_TRIANGLES, mesh.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 		
@@ -253,7 +259,11 @@ int main() {
 
 
 		//std::cout << "Triangles: " << triangles << "\n";
+
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);
+		char a;
+		//std::cin >> a;
+		//scanf("%c", &a);
 	}
 
 	cleanup();

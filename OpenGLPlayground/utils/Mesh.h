@@ -25,7 +25,7 @@ public:
 
 	Mesh(int verticesSize, int indicesSize);
 
-	void loadMeshData(float* vertices, uint32_t verticesSize, unsigned int* indices, uint32_t indicesSize);
+	void loadMeshData(float* vertices, uint32_t verticesSize, uint32_t* indices, uint32_t indicesSize);
 
 	void loadMeshData(std::vector<glm::vec3>* vertices, std::vector<uint32_t>* indices);
 
