@@ -3,10 +3,10 @@ const int width = 800;
 const int height = 800;
 
 struct Material {
-	uint32_t texture;
 	glm::vec3 albedo;
 	glm::vec3 diffuse;
 	glm::vec3 specular;
+	float shininess;
 };
 
 
@@ -18,8 +18,8 @@ struct Model {
 
 int main() {
 	initRenderer(width, height);
-	glUseProgram(program);
 	
+	glUseProgram(program);
 
 	// create our VAO
 	unsigned int VAO;
@@ -96,19 +96,17 @@ int main() {
 	glm::mat4 view = glm::lookAt(glm::vec3(0, 1, 1), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
 
-	glm::mat4 translate = glm::translate(trans, glm::vec3(0, -4, 10));
-	glm::mat4 rotate = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0, 1, 0));
 
-	glm::mat4 model = translate * rotate;
 
 	unsigned int projLoc, viewLoc, modelLoc;
 	projLoc = glGetUniformLocation(program, "projection");
 	viewLoc = glGetUniformLocation(program, "view");
 	modelLoc = glGetUniformLocation(program, "model");
 
+
 	std::cout << "Proj: " << projLoc << " View: " << viewLoc << " Model: " << modelLoc << "\n";
 
-	float cntr = 0.001f;
+
 	
 	std::chrono::high_resolution_clock::time_point start;
 	std::chrono::high_resolution_clock::time_point end;
@@ -140,8 +138,6 @@ int main() {
 	for (int i = 0; i < 100000; i++) {
 		models_.push_back(glm::translate(trans, glm::vec3(rand() % 10, rand() % 10, rand() % 10)));
 	}
-
-
 	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
 
 
@@ -172,7 +168,6 @@ int main() {
 
 	initProfile(10,10000, true);
 
-	glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
 
 	GLsizei counts[] = { inds.size(), inds.size(), inds.size() - 18};
 	GLvoid* starts[] = { (GLvoid*)0, (GLvoid*)0, (GLvoid*)(NULL + 18*sizeof(unsigned int))};
@@ -204,10 +199,27 @@ int main() {
 	glGenBuffers(1, &textureCoords);
 	glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoordsArray), textureCoordsArray, GL_STATIC_DRAW);
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	//glDepthMask(GL_TRUE);
 	//glDepthFunc(GL_LESS);
 	//glDisable(GL_DEPTH_TEST);
+
+	// set the camera up early
+	updateProjView(&proj, &view, width, height);
+
+
+	Material mat = { {1,0,0},{0,0,0},{1,1,1},10.0 };
+
+
+	uint32_t matAlbedo = glGetUniformLocation(program, "material.albedo");
+	std::cout << "Location: " << matAlbedo << "\n";
+	glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
+
+	//checkErrors();
+	//exit(1);
+
+
+
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
 
@@ -222,11 +234,13 @@ int main() {
 		//glClear(GL_DEPTH_BUFFER_BIT);
 		//glClear(GL_COLOR_BUFFER_BIT);
 
+		glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
 
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
+		// X is flipped
+		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(glm::mat4(1), {-5,0,0})));
 
-
-		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, {1,2,1})));
+		glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
 
 
 
@@ -240,8 +254,10 @@ int main() {
 		glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 
-		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { -4,2,1 })));
+		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,0,0 })));
 
+
+		glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(0, 1, 1)));
 
 		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);

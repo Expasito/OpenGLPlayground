@@ -333,8 +333,9 @@ unsigned int loadTexture(const char* path,
 
 
 void updateProjView(glm::mat4* proj, glm::mat4* view, int width, int height) {
+	*view = glm::lookAt(camera.cameraPos, camera.cameraPos + camera.cameraFront, camera.cameraUp);
 	*proj = glm::perspective(glm::radians(camera.fov), (float)width / height, .01f, 1000.0f);
-	*view = glm::lookAt(camera.cameraPos, camera.cameraPos + camera.cameraFront, glm::vec3(0, 1, 0));
+
 }
 
 GLFWwindow* window;
@@ -413,10 +414,10 @@ void postRenderingSteps(bool log, GLFWwindow* window,
 
 	glfwSwapBuffers(window);
 	glfwPollEvents();
-	checkErrors();
-	updateProjView(proj, view, width, height);
 
 	camera.translate(userInput.A, userInput.D, userInput.space, userInput.leftShift, userInput.W, userInput.S);
+	updateProjView(proj, view, width, height);
+
 
 	if (userInput.B == 1) {
 		shouldProfile = true;
@@ -434,6 +435,7 @@ void postRenderingSteps(bool log, GLFWwindow* window,
 	}
 
 	profileFrame(milis);
+	checkErrors();
 
 }
 
