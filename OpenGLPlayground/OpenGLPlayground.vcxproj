@@ -602,6 +602,7 @@
     <ClInclude Include="utils\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="textures\Blood.png" />
     <Image Include="textures\GrassBlock.png" />
     <Image Include="textures\OldRock.png" />
     <Image Include="textures\Rock.png" />

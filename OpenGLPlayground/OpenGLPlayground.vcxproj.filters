@@ -1419,6 +1419,9 @@
     <Image Include="textures\WoodInside.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="textures\Blood.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="utils\Results.txt" />

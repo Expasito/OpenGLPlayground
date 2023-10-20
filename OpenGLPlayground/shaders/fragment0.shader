@@ -29,10 +29,10 @@ void main() {
 		FragColor = texture(textures[texturing],textCoords);
 	}
 	else {
-		FragColor = vec4(0, 1, 0, 1);
+		FragColor = vec4(material.albedo, 1);
 	}
 
-	FragColor = vec4(textCoords.x, textCoords.y, 1, 1);
-	FragColor = vec4(test/10.0, 1, 0, 1);
-	FragColor = vec4(material.albedo, 1);
+	//FragColor = vec4(textCoords.x, textCoords.y, 1, 1);
+	//FragColor = vec4(test/10.0, 1, 0, 1);
+	//FragColor = vec4(material.albedo, 1);
 }

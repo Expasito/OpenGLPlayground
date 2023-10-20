@@ -11,7 +11,11 @@ struct Material {
 
 
 struct Model {
-	std::vector<Mesh> components;
+	std::vector<Mesh*> components;
+
+	void add(Mesh* m) {
+		components.push_back(m);
+	}
 };
 
 
@@ -20,24 +24,13 @@ int main() {
 	initRenderer(width, height);
 	
 	glUseProgram(program);
+	glEnable(GL_DEPTH_TEST);
+
 
 	// create our VAO
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-
-	
-
-	// create our vertex position buffer
-	unsigned int verticesBuffer;
-	glGenBuffers(1, &verticesBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
-
-	// and create our element index buffer
-	unsigned int EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
 
 
 	std::vector<glm::vec3> verts;
@@ -50,18 +43,6 @@ int main() {
 	std::vector<uint32_t>* inds_ = &inds;
 
 	mesh2.loadMeshData(&verts, &inds);
-	//glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts.size(), glm::value_ptr(verts[0]), GL_DYNAMIC_DRAW);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verts_->size(), glm::value_ptr((*verts_)[0]), GL_DYNAMIC_DRAW);
-
-
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
-
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * inds_->size(), &(*inds_)[0], GL_DYNAMIC_DRAW);
 
 
 
@@ -123,6 +104,25 @@ int main() {
 		
 	}
 
+	unsigned int texture0 = loadTexture("textures/GrassBlock.png",
+		GL_MIRRORED_REPEAT,
+		GL_MIRRORED_REPEAT,
+		GL_LINEAR_MIPMAP_LINEAR,
+		GL_LINEAR);
+
+	glBindTextureUnit(0, texture0);
+
+	unsigned int texture1 = loadTexture("textures/OldRock.png",
+		GL_MIRRORED_REPEAT,
+		GL_MIRRORED_REPEAT,
+		GL_LINEAR_MIPMAP_LINEAR,
+		GL_LINEAR);
+	glBindTextureUnit(1,texture1);
+
+
+
+
+
 
 	// Make model matrices and send them over
 	unsigned int models;
@@ -138,19 +138,17 @@ int main() {
 	for (int i = 0; i < 100000; i++) {
 		models_.push_back(glm::translate(trans, glm::vec3(rand() % 10, rand() % 10, rand() % 10)));
 	}
+
+	// send models to the gpu
 	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
 
 
-	unsigned int texture1 = loadTexture("textures/Blood.png",
-		GL_MIRRORED_REPEAT,
-		GL_MIRRORED_REPEAT,
-		GL_LINEAR_MIPMAP_LINEAR,
-		GL_LINEAR);
+	//unsigned int texture1 = loadTexture("textures/StonePath.png",
+	//	GL_MIRRORED_REPEAT,
+	//	GL_MIRRORED_REPEAT,
+	//	GL_LINEAR_MIPMAP_LINEAR,
+	//	GL_LINEAR);
 
-
-	checkErrors();
-
-	//exit(1);
 
 	int texture_units;
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
@@ -181,7 +179,7 @@ int main() {
 	GLvoid* s[] = { (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5)};
 
 	// no texturing
-	glUniform1i(glGetUniformLocation(program, "texturing"), 0);
+	glUniform1i(glGetUniformLocation(program, "texturing"), 1);
 
 	uint32_t textureCoords;
 	float textureCoordsArray[] = {
@@ -199,10 +197,6 @@ int main() {
 	glGenBuffers(1, &textureCoords);
 	glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoordsArray), textureCoordsArray, GL_STATIC_DRAW);
-	glEnable(GL_DEPTH_TEST);
-	//glDepthMask(GL_TRUE);
-	//glDepthFunc(GL_LESS);
-	//glDisable(GL_DEPTH_TEST);
 
 	// set the camera up early
 	updateProjView(&proj, &view, width, height);
@@ -215,8 +209,12 @@ int main() {
 	std::cout << "Location: " << matAlbedo << "\n";
 	glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
 
-	//checkErrors();
-	//exit(1);
+
+	uint32_t cubeBuff;
+	glGenBuffers(1, &cubeBuff);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeBuff);
+	glBufferData(GL_ARRAY_BUFFER, cubeVertsSize, cubeVertices, GL_DYNAMIC_DRAW);
+
 
 
 
@@ -229,20 +227,19 @@ int main() {
 		triangles = 0;
 
 
-		// clear the buffer
+		// clear the buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glClear(GL_DEPTH_BUFFER_BIT);
-		//glClear(GL_COLOR_BUFFER_BIT);
+
 
 		glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
-
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
-		// X is flipped
+
+
+
+		glUniform1i(glGetUniformLocation(program, "texturing"), -1);
+
 		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(glm::mat4(1), {-5,0,0})));
-
 		glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
-
-
 
 		glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
@@ -254,9 +251,10 @@ int main() {
 		glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 
+
+
+
 		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,0,0 })));
-
-
 		glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(0, 1, 1)));
 
 		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
@@ -268,18 +266,17 @@ int main() {
 
 		glDrawElements(GL_TRIANGLES, mesh.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
-		
 
-		//triangles += indices2Size / 3;
-		//triangles += indexDataSize / 3 * models_.size();
+		glUniform1i(glGetUniformLocation(program, "texturing"), 1);
+		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,5,0 })));
 
+		glBindBuffer(GL_ARRAY_BUFFER, cubeBuff);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		//std::cout << "Triangles: " << triangles << "\n";
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);
-		char a;
-		//std::cin >> a;
-		//scanf("%c", &a);
 	}
 
 	cleanup();
