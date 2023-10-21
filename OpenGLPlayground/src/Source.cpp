@@ -10,10 +10,47 @@ struct Material {
 };
 
 
-struct Model {
-	std::vector<Mesh*> components;
+struct Component {
+	Mesh* mesh;
+	Material material;
+	glm::vec3 translate;
+	glm::vec3 rotate;
+	glm::vec3 scalate;
+	glm::mat4 model;
 
-	void add(Mesh* m) {
+	Component(Mesh* mesh, Material material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate) {
+		this->mesh = mesh;
+		this->material = material;
+		this->translate = translate;
+		this->rotate = rotate;
+		this->scalate = scalate;
+		updateModelMatrix();
+	}
+
+	void updateModelMatrix() {
+		glm::mat4 trans(1.0f);
+		model = glm::scale(trans, scalate) *
+			glm::rotate(trans, glm::radians(rotate.x), { 1,0,0 }) *
+			glm::rotate(trans, glm::radians(rotate.y), { 0,1,0 }) *
+			glm::rotate(trans, glm::radians(rotate.z), { 0,0,1 }) *
+			glm::translate(trans, translate);
+	}
+
+	void draw() {
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->ibo);
+
+		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glDrawElements(GL_TRIANGLES, mesh->indicesBufferSize, GL_UNSIGNED_INT, 0);
+	}
+};
+
+
+struct Model {
+	std::vector<Component*> components;
+
+	void add(Component* m) {
 		components.push_back(m);
 	}
 };
@@ -60,6 +97,10 @@ int main() {
 	
 	mesh.loadMeshData(&verts2, &inds2);
 
+
+	Model m;
+
+	Component comp(&mesh, { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f }, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
 
 
 
@@ -274,6 +315,9 @@ int main() {
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		comp.draw();
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);

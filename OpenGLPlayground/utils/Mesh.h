@@ -31,6 +31,7 @@ public:
 
 
 
+
 private:
 	void init(int sizeVBO, int sizeIBO);
 
