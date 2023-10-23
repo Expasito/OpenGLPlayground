@@ -15,24 +15,22 @@ struct Material {
 	vec3 diffuse;
 	vec3 specular;
 	float shininess;
+	int areTextures;
 };
 
 uniform Material material;
 
 void main() {
 
-	//Material material = { {1,0,0}, {0,1,0}, {0,0,1}, 10 };
-
-	int test = draw + 5;
-
-	if (texturing >= 0) {
-		FragColor = texture(textures[texturing],textCoords);
+	if (material.areTextures == 1) {
+		vec3 result = vec3(0);
+		vec4 alb = texture(textures[int(material.albedo.x)], textCoords);
+		result += alb.xyz;
+		FragColor = vec4(result, 1);
 	}
 	else {
-		FragColor = vec4(material.albedo, 1);
+		vec3 result = vec3(0);
+		result += material.albedo;
+		FragColor = vec4(result,1);
 	}
-
-	//FragColor = vec4(textCoords.x, textCoords.y, 1, 1);
-	//FragColor = vec4(test/10.0, 1, 0, 1);
-	//FragColor = vec4(material.albedo, 1);
 }

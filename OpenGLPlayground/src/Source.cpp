@@ -2,12 +2,24 @@
 const int width = 800;
 const int height = 800;
 
+
 struct Material {
 	glm::vec3 albedo;
 	glm::vec3 diffuse;
 	glm::vec3 specular;
 	float shininess;
+	// 1 means that we use texture index from an array, 0 means we just use the actual values
+	int areTextures;
+
+	void bindAttributes(uint32_t matAlbedo, uint32_t matDiffuse, uint32_t matSpecular, uint32_t matShininess, uint32_t matAreTextures) {
+		glUniform3fv(matAlbedo, 1, glm::value_ptr(albedo));
+		glUniform3fv(matDiffuse, 1, glm::value_ptr(diffuse));
+		glUniform3fv(matSpecular, 1, glm::value_ptr(specular));
+		glUniform1f(matShininess, shininess);
+		glUniform1i(matAreTextures, areTextures);
+	}
 };
+
 
 
 struct Component {
@@ -36,12 +48,14 @@ struct Component {
 			glm::translate(trans, translate);
 	}
 
-	void draw() {
+	void draw(uint32_t matAlbedo, uint32_t matDiffuse, uint32_t matSpecular, uint32_t matShininess, uint32_t matAreTextures) {
 		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, mesh->ibo);
 
 		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+		material.bindAttributes(matAlbedo, matDiffuse, matSpecular, matShininess, matAreTextures);
 		glDrawElements(GL_TRIANGLES, mesh->indicesBufferSize, GL_UNSIGNED_INT, 0);
 	}
 };
@@ -100,7 +114,7 @@ int main() {
 
 	Model m;
 
-	Component comp(&mesh, { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f }, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
+	Component comp(&mesh, { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f, 1 }, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
 
 
 
@@ -243,11 +257,21 @@ int main() {
 	updateProjView(&proj, &view, width, height);
 
 
-	Material mat = { {1,0,0},{0,0,0},{1,1,1},10.0 };
+	Material mat = { {1,0,0},{0,0,0},{1,1,1},10.0, 0 };
 
 
 	uint32_t matAlbedo = glGetUniformLocation(program, "material.albedo");
-	std::cout << "Location: " << matAlbedo << "\n";
+	uint32_t matDiffuse = glGetUniformLocation(program, "material.diffuse");
+	uint32_t matSpecular = glGetUniformLocation(program, "material.specular");
+	uint32_t matShininess = glGetUniformLocation(program, "material.shininess");
+	uint32_t matAreTextures = glGetUniformLocation(program, "material.areTextures");
+
+	std::cout << "Albedo: " << matAlbedo << "\n";
+	std::cout << "Diffuse: " << matDiffuse << "\n";
+	std::cout << "Specular: " << matSpecular << "\n";
+	std::cout << "Shininess: " << matShininess << "\n";
+	std::cout << "AreTextures: " << matAreTextures << "\n";
+
 	glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
 
 
@@ -289,7 +313,7 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
-		glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 
 
@@ -305,7 +329,7 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
-		glDrawElements(GL_TRIANGLES, mesh.indicesBufferSize, GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_TRIANGLES, mesh.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 
 		glUniform1i(glGetUniformLocation(program, "texturing"), 1);
@@ -314,10 +338,10 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, cubeBuff);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
-		comp.draw();
+		comp.draw(matAlbedo, matDiffuse, matSpecular, matShininess, matAreTextures);
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);
