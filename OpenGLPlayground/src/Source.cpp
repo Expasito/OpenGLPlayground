@@ -3,6 +3,13 @@ const int width = 800;
 const int height = 800;
 
 
+uint32_t matAlbedo = -1;
+uint32_t matDiffuse = -1;
+uint32_t matSpecular = -1;
+uint32_t matShininess = -1;
+uint32_t matAreTextures = -1;
+
+
 struct Material {
 	glm::vec3 albedo;
 	glm::vec3 diffuse;
@@ -11,32 +18,43 @@ struct Material {
 	// 1 means that we use texture index from an array, 0 means we just use the actual values
 	int areTextures;
 
-	void bindAttributes(uint32_t matAlbedo, uint32_t matDiffuse, uint32_t matSpecular, uint32_t matShininess, uint32_t matAreTextures) {
+	std::vector<void*> components;
+
+	void bindAttributes() {
 		glUniform3fv(matAlbedo, 1, glm::value_ptr(albedo));
 		glUniform3fv(matDiffuse, 1, glm::value_ptr(diffuse));
 		glUniform3fv(matSpecular, 1, glm::value_ptr(specular));
 		glUniform1f(matShininess, shininess);
 		glUniform1i(matAreTextures, areTextures);
 	}
+
+	void add(void* c) {
+		components.push_back(c);
+	}
+
+	// we will add a draw function somehwere else
+
+
 };
 
 
 
 struct Component {
 	Mesh* mesh;
-	Material material;
+	Material* material;
 	glm::vec3 translate;
 	glm::vec3 rotate;
 	glm::vec3 scalate;
 	glm::mat4 model;
 
-	Component(Mesh* mesh, Material material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate) {
+	Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate) {
 		this->mesh = mesh;
 		this->material = material;
 		this->translate = translate;
 		this->rotate = rotate;
 		this->scalate = scalate;
 		updateModelMatrix();
+		material->add(this);
 	}
 
 	void updateModelMatrix() {
@@ -48,14 +66,14 @@ struct Component {
 			glm::translate(trans, translate);
 	}
 
-	void draw(uint32_t matAlbedo, uint32_t matDiffuse, uint32_t matSpecular, uint32_t matShininess, uint32_t matAreTextures) {
+	void draw() {
 		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, mesh->ibo);
 
 		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-		material.bindAttributes(matAlbedo, matDiffuse, matSpecular, matShininess, matAreTextures);
+		material->bindAttributes();
 		glDrawElements(GL_TRIANGLES, mesh->indicesBufferSize, GL_UNSIGNED_INT, 0);
 	}
 };
@@ -67,6 +85,17 @@ struct Model {
 	void add(Component* m) {
 		components.push_back(m);
 	}
+
+	void draw() {
+		for (Component* c : components) {
+			c->draw();
+		}
+	}
+};
+
+struct Node {
+	Model* model;
+	
 };
 
 
@@ -111,11 +140,26 @@ int main() {
 	
 	mesh.loadMeshData(&verts2, &inds2);
 
+	Material m1 = { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f, 1 };
+	Material m2 = { {1,1,0},{.4,.2,.4},{.7,.6,.5},90,0 };
+
 
 	Model m;
 
-	Component comp(&mesh, { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f, 1 }, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
+	Component comp(&mesh,&m1, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
 
+	Component comp2(&mesh, 
+		&m2, 
+		{-4,-3,2},
+		{0,45,30},
+		{1,2,1}
+	);
+
+	Component comp3(&mesh2, &m1, { 0,0,0 }, { 0,0,0 }, { .5,.5,.5 });
+
+	m.add(&comp);
+	m.add(&comp2);
+	m.add(&comp3);
 
 
 
@@ -260,11 +304,11 @@ int main() {
 	Material mat = { {1,0,0},{0,0,0},{1,1,1},10.0, 0 };
 
 
-	uint32_t matAlbedo = glGetUniformLocation(program, "material.albedo");
-	uint32_t matDiffuse = glGetUniformLocation(program, "material.diffuse");
-	uint32_t matSpecular = glGetUniformLocation(program, "material.specular");
-	uint32_t matShininess = glGetUniformLocation(program, "material.shininess");
-	uint32_t matAreTextures = glGetUniformLocation(program, "material.areTextures");
+	matAlbedo = glGetUniformLocation(program, "material.albedo");
+	matDiffuse = glGetUniformLocation(program, "material.diffuse");
+	matSpecular = glGetUniformLocation(program, "material.specular");
+	matShininess = glGetUniformLocation(program, "material.shininess");
+	matAreTextures = glGetUniformLocation(program, "material.areTextures");
 
 	std::cout << "Albedo: " << matAlbedo << "\n";
 	std::cout << "Diffuse: " << matDiffuse << "\n";
@@ -295,43 +339,17 @@ int main() {
 		// clear the buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 		glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 
 
-		glUniform1i(glGetUniformLocation(program, "texturing"), -1);
-
-		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(glm::mat4(1), {-5,0,0})));
-		glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
-
-		glBindBuffer(GL_ARRAY_BUFFER, mesh2.vbo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh2.ibo);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-
-		//glDrawElements(GL_TRIANGLES, mesh2.indicesBufferSize, GL_UNSIGNED_INT, 0);
 
 
 
 
 
-		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,0,0 })));
-		glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(0, 1, 1)));
-
-		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-
-		//glDrawElements(GL_TRIANGLES, mesh.indicesBufferSize, GL_UNSIGNED_INT, 0);
-
-
+		// We need to standardize what is required for input vertices
 		glUniform1i(glGetUniformLocation(program, "texturing"), 1);
 		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,5,0 })));
 
@@ -341,7 +359,14 @@ int main() {
 		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
-		comp.draw(matAlbedo, matDiffuse, matSpecular, matShininess, matAreTextures);
+		//m.draw();
+
+		//comp.draw();
+		//comp2.draw();
+
+		for (void* c : m.components) {
+			((Component*)c)->draw();
+		}
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);
