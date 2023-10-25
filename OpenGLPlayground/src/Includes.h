@@ -16,3 +16,6 @@
 
 #include <Soil/SOIL.h>
 #include <vector>
+
+#include "Component.h"
+#include "Material.h"

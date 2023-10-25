@@ -28,6 +28,13 @@ int verts2Size = 0;
 unsigned int* indices2;
 int indices2Size = 0;
 
+
+uint32_t matAlbedo = -1;
+uint32_t matDiffuse = -1;
+uint32_t matSpecular = -1;
+uint32_t matShininess = -1;
+uint32_t matAreTextures = -1;
+
 void genVerts2(int points, int displacement) {
 	// make it so points is a multiple of 3
 	points = points / 3 * 3;

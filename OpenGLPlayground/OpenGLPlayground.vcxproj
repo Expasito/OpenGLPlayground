@@ -133,6 +133,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="Depend\include\glm\detail\glm.cpp" />
     <ClCompile Include="Depend\include\Render\Camera.cpp" />
     <ClCompile Include="Depend\include\Render\glad.c" />
@@ -295,6 +297,8 @@
     <Library Include="Depend\lib\glfw3_mt.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Material.h" />
+    <ClInclude Include="src\Component.h" />
     <ClInclude Include="Depend\include\glad\glad.h" />
     <ClInclude Include="Depend\include\GLFW\glfw3.h" />
     <ClInclude Include="Depend\include\GLFW\glfw3native.h" />

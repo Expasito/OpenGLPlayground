@@ -3,80 +3,10 @@ const int width = 800;
 const int height = 800;
 
 
-uint32_t matAlbedo = -1;
-uint32_t matDiffuse = -1;
-uint32_t matSpecular = -1;
-uint32_t matShininess = -1;
-uint32_t matAreTextures = -1;
-
-
-struct Material {
-	glm::vec3 albedo;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
-	float shininess;
-	// 1 means that we use texture index from an array, 0 means we just use the actual values
-	int areTextures;
-
-	std::vector<void*> components;
-
-	void bindAttributes() {
-		glUniform3fv(matAlbedo, 1, glm::value_ptr(albedo));
-		glUniform3fv(matDiffuse, 1, glm::value_ptr(diffuse));
-		glUniform3fv(matSpecular, 1, glm::value_ptr(specular));
-		glUniform1f(matShininess, shininess);
-		glUniform1i(matAreTextures, areTextures);
-	}
-
-	void add(void* c) {
-		components.push_back(c);
-	}
-
-	// we will add a draw function somehwere else
-
-
-};
 
 
 
-struct Component {
-	Mesh* mesh;
-	Material* material;
-	glm::vec3 translate;
-	glm::vec3 rotate;
-	glm::vec3 scalate;
-	glm::mat4 model;
 
-	Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate) {
-		this->mesh = mesh;
-		this->material = material;
-		this->translate = translate;
-		this->rotate = rotate;
-		this->scalate = scalate;
-		updateModelMatrix();
-		material->add(this);
-	}
-
-	void updateModelMatrix() {
-		glm::mat4 trans(1.0f);
-		model = glm::scale(trans, scalate) *
-			glm::rotate(trans, glm::radians(rotate.x), { 1,0,0 }) *
-			glm::rotate(trans, glm::radians(rotate.y), { 0,1,0 }) *
-			glm::rotate(trans, glm::radians(rotate.z), { 0,0,1 }) *
-			glm::translate(trans, translate);
-	}
-
-	void draw() {
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->ibo);
-
-		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-		material->bindAttributes();
-		glDrawElements(GL_TRIANGLES, mesh->indicesBufferSize, GL_UNSIGNED_INT, 0);
-	}
-};
 
 
 struct Model {
@@ -140,26 +70,30 @@ int main() {
 	
 	mesh.loadMeshData(&verts2, &inds2);
 
-	Material m1 = { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f, 1 };
-	Material m2 = { {1,1,0},{.4,.2,.4},{.7,.6,.5},90,0 };
+	//Material m1 = { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f, 1 };
+	//Material m2 = { {1,1,0},{.4,.2,.4},{.7,.6,.5},90,0 };
+
+	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
+
+	Component c1(&mesh, &m1, { 0,0,0 }, {90,0,0}, {1,2,1});
 
 
-	Model m;
+	//Model m;
 
-	Component comp(&mesh,&m1, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
+	//Component comp(&mesh,&m1, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
 
-	Component comp2(&mesh, 
-		&m2, 
-		{-4,-3,2},
-		{0,45,30},
-		{1,2,1}
-	);
+	//Component comp2(&mesh, 
+	//	&m2, 
+	//	{-4,-3,2},
+	//	{0,45,30},
+	//	{1,2,1}
+	//);
 
-	Component comp3(&mesh2, &m1, { 0,0,0 }, { 0,0,0 }, { .5,.5,.5 });
+	//Component comp3(&mesh2, &m1, { 0,0,0 }, { 0,0,0 }, { .5,.5,.5 });
 
-	m.add(&comp);
-	m.add(&comp2);
-	m.add(&comp3);
+	//m.add(&comp);
+	//m.add(&comp2);
+	//m.add(&comp3);
 
 
 
@@ -301,7 +235,7 @@ int main() {
 	updateProjView(&proj, &view, width, height);
 
 
-	Material mat = { {1,0,0},{0,0,0},{1,1,1},10.0, 0 };
+	//Material mat = { {1,0,0},{0,0,0},{1,1,1},10.0, 0 };
 
 
 	matAlbedo = glGetUniformLocation(program, "material.albedo");
@@ -359,14 +293,18 @@ int main() {
 		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
+
+		//c1.draw();
+
+		m1.drawAll();
 		//m.draw();
 
 		//comp.draw();
 		//comp2.draw();
 
-		for (void* c : m.components) {
-			((Component*)c)->draw();
-		}
+		//for (void* c : m.components) {
+		//	((Component*)c)->draw();
+		//}
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);

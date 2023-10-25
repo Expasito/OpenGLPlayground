@@ -58,3 +58,9 @@ extern int indices2Size;
 
 extern float cubeVertices[];
 extern size_t cubeVertsSize;
+
+extern uint32_t matAlbedo;
+extern uint32_t matDiffuse;
+extern uint32_t matSpecular;
+extern uint32_t matShininess;
+extern uint32_t matAreTextures;
