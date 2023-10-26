@@ -12,11 +12,12 @@ Component::Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::v
 
 void Component::updateModelMatrix() {
 	glm::mat4 trans(1.0f);
-	model = glm::scale(trans, scalate) *
+	model = glm::translate(trans, translate) * 
 		glm::rotate(trans, glm::radians(rotate.x), { 1,0,0 }) *
 		glm::rotate(trans, glm::radians(rotate.y), { 0,1,0 }) *
 		glm::rotate(trans, glm::radians(rotate.z), { 0,0,1 }) *
-		glm::translate(trans, translate);
+		glm::scale(trans, scalate);
+
 };
 
 void Component::draw() {

@@ -75,7 +75,19 @@ int main() {
 
 	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
 
+	Material m2({1,0,0}, {2,0,0}, {0,0,0}, 10, 1);
+
 	Component c1(&mesh, &m1, { 0,0,0 }, {90,0,0}, {1,2,1});
+	Component c2(&mesh, &m2, {5,0,0}, {0,0,0}, {1,1,1});
+
+	Component c3(&mesh2, &m1, {0,0,5}, {0,90,0}, {2,2,2});
+	Component c4(&mesh2, &m2, {-5,-5,0}, {45,45,45}, {3,3,3});
+
+	Model m;
+	m.add(&c1);
+	m.add(&c2);
+	m.add(&c3);
+	m.add(&c4);
 
 
 	//Model m;
@@ -295,8 +307,11 @@ int main() {
 
 
 		//c1.draw();
+		//c2.draw();
 
-		m1.drawAll();
+		m.draw();
+
+		//m1.drawAll();
 		//m.draw();
 
 		//comp.draw();
