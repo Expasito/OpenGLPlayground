@@ -213,8 +213,16 @@ void makeIBO(float* vertices, uint32_t verticesSize,
 		int index = vectorContains(vertexData, temp);
 
 		// just add regardless
-		vertexData->push_back(temp);
-		indexData->push_back(vertexData->size()-1);
+		//vertexData->push_back(temp);
+		//indexData->push_back(vertexData->size()-1);
+
+		if (index >= 0) {
+			indexData->push_back(vertexData->size() - 1);
+		}
+		else {
+			vertexData->push_back(temp);
+			indexData->push_back(vertexData->size()-1);
+		}
 
 		//// if in the array, set the ibo to the index
 		//if (index >= 0) {
