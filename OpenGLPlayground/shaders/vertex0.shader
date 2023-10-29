@@ -2,7 +2,8 @@
 #version 460 core
 
 layout(location = 0) in vec3 pos;
-layout(location = 1) in vec2 textCoords_;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec2 textCoord;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -14,12 +15,19 @@ uniform mat4 models[5];
 
 
 out int draw;
-out vec2 textCoords;
+out vec3 pos_;
+out vec3 normal_;
+out vec2 textCoord_;
 
 
 void main() {
 	draw = gl_DrawID;
-	textCoords = textCoords_;
+
+	pos_ = pos;
+	normal_ = normal;
+	//textCoord_ = vec2(textCoord.x, textCoord.y);
+	textCoord_ = textCoord;
+	//textCoords = textCoords_;
 
 	// copy the matrix and negate the x component for the transforms
 	mat4 model_ = model;

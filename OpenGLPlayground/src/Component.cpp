@@ -22,11 +22,16 @@ void Component::updateModelMatrix() {
 
 void Component::draw() {
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	// give position, normal and texture coordinate data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 3));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 6));
+
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->ibo);
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	material->bindAttributes();
-	glDrawElements(GL_TRIANGLES, mesh->indicesBufferSize, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	//std::cout << mesh->indicesBufferSize << "\n";
 };

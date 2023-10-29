@@ -43,49 +43,48 @@ int main() {
 	glBindVertexArray(VAO);
 
 
-	std::vector<glm::vec3> verts;
+	float data[] = {
+		-1,-1,-1, -1,-1,-1, 0,0,
+		-1,1,-1, -1,1,-1, 0,1,
+		1,-1,-1, 1,-1,-1, 1,0,
+
+		-1,1,-1, -1,1,-1, 0,1,
+		1,-1,-1, 1,-1,-1, 1,0,
+		1,1,-1, 1,1,-1, 1,1
+	};
+
+
+	std::vector<Vertex> verts;
 	std::vector<uint32_t> inds;
-	makeIBO(vertices, verticesSize/sizeof(float),  &verts,  &inds);
+	makeIBO(data, sizeof(data)/sizeof(float), &verts, &inds);
 
 	Mesh mesh2;
 
-	std::vector<glm::vec3>* verts_ = &verts;
+	std::vector<Vertex>* verts_ = &verts;
 	std::vector<uint32_t>* inds_ = &inds;
 
 	mesh2.loadMeshData(&verts, &inds);
 
+	for (int i = 0; i < verts.size(); i++) {
+		Vertex v = verts.at(i);
+		std::cout << v.pos.x << " " << v.pos.y << " " << v.pos.z << ", " << v.normal.x << " " << v.normal.y << " " << v.normal.z << ", " << v.textCoord.x << " " << v.textCoord.y << "\n";
+	}
 
+	for (int i = 0; i < inds.size(); i++) {
+		std::cout << inds.at(i) << "\n";
+	}
 
-	std::vector<glm::vec3> verts2;
-	verts2.push_back({ -1, -1, -1 });
-	verts2.push_back({ -1,1,-1 });
-	verts2.push_back({ 1,-1,-1 });
+	//exit(1);
 
-	std::vector<uint32_t> inds2;
-	inds2.push_back(0);
-	inds2.push_back(1);
-	inds2.push_back(2);
-
-	Mesh mesh;
-	
-	mesh.loadMeshData(&verts2, &inds2);
-
-	//Material m1 = { {1.0, .5, .3}, {.5,.5,.5}, {.25,.25,.25}, 100.0f, 1 };
-	//Material m2 = { {1,1,0},{.4,.2,.4},{.7,.6,.5},90,0 };
 
 	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
 
 	Material m2({1,0,0}, {2,0,0}, {0,0,0}, 10, 1);
 
-	Component c1(&mesh, &m1, { 0,0,0 }, {90,0,0}, {1,2,1});
-	Component c2(&mesh, &m2, {5,0,0}, {0,0,0}, {1,1,1});
-
 	Component c3(&mesh2, &m1, {0,0,5}, {0,90,0}, {2,2,2});
 	Component c4(&mesh2, &m2, {-5,-5,0}, {45,45,45}, {3,3,3});
 
 	Model m;
-	m.add(&c1);
-	m.add(&c2);
 	m.add(&c3);
 	m.add(&c4);
 
@@ -111,6 +110,8 @@ int main() {
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
 
 
 
@@ -226,23 +227,6 @@ int main() {
 	// no texturing
 	glUniform1i(glGetUniformLocation(program, "texturing"), 1);
 
-	uint32_t textureCoords;
-	float textureCoordsArray[] = {
-		0, 0,
-		0, 1,
-		1, 0,
-		1,1,
-		0,1,
-		1,1,
-		0,0,
-		1,0,
-		1,1,
-		0,1,
-	};
-	glGenBuffers(1, &textureCoords);
-	glBindBuffer(GL_ARRAY_BUFFER, textureCoords);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoordsArray), textureCoordsArray, GL_STATIC_DRAW);
-
 	// set the camera up early
 	updateProjView(&proj, &view, width, height);
 
@@ -265,12 +249,17 @@ int main() {
 	glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
 
 
-	uint32_t cubeBuff;
-	glGenBuffers(1, &cubeBuff);
-	glBindBuffer(GL_ARRAY_BUFFER, cubeBuff);
-	glBufferData(GL_ARRAY_BUFFER, cubeVertsSize, cubeVertices, GL_DYNAMIC_DRAW);
 
 
+	uint32_t allData;
+	glGenBuffers(1, &allData);
+	glBindBuffer(GL_ARRAY_BUFFER, allData);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts.size(), &verts[0], GL_DYNAMIC_DRAW);
+
+	uint32_t allInds;
+	glGenBuffers(1, &allInds);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, allInds);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
 
 
 	while (!glfwWindowShouldClose(window)) {
@@ -295,13 +284,13 @@ int main() {
 
 
 
-		// We need to standardize what is required for input vertices
-		glUniform1i(glGetUniformLocation(program, "texturing"), 1);
-		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,5,0 })));
+		//// We need to standardize what is required for input vertices
+		//glUniform1i(glGetUniformLocation(program, "texturing"), 1);
+		//glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,5,0 })));
 
-		glBindBuffer(GL_ARRAY_BUFFER, cubeBuff);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
+		//glBindBuffer(GL_ARRAY_BUFFER, cubeBuff);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
 		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
@@ -309,7 +298,22 @@ int main() {
 		//c1.draw();
 		//c2.draw();
 
-		m.draw();
+
+		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(c3.model));
+
+		glBindBuffer(GL_ARRAY_BUFFER, allData);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 3));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 6));
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, allInds);
+
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+
+
+		//m.draw();
 
 		//m1.drawAll();
 		//m.draw();

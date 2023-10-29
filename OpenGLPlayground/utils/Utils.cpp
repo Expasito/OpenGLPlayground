@@ -184,15 +184,17 @@ float vertices[] = {
 
 size_t verticesSize = sizeof(vertices);
 
-int vectorContains(std::vector<glm::vec3>* v, glm::vec3 element) {
+int vectorContains(std::vector<Vertex>* v, Vertex element) {
 	for (int i = 0; i < v->size(); i++) {
-		glm::vec3 temp = v->at(i);
-		if (temp == element) {
+		Vertex temp = v->at(i);
+		if (temp.pos == element.pos && temp.normal == element.normal && temp.textCoord == element.textCoord) {
 			return i;
 		}
 	}
 	return -1;
 }
+
+
 
 /*
 * 
@@ -201,38 +203,35 @@ int vectorContains(std::vector<glm::vec3>* v, glm::vec3 element) {
 * 
 */
 void makeIBO(float* vertices, uint32_t verticesSize,
-	std::vector<glm::vec3>* vertexData,
+	std::vector<Vertex>* vertexData,
 	std::vector<uint32_t>* indexData) {
 	std::cout << "NUM VERTICES: " << verticesSize  << "\n";
-	for (int i = 0; i < verticesSize; i+=3) {
+	for (int i = 0; i < verticesSize; i+=8) {
+		// position data
 		float f1 = vertices[i];
 		float f2 = vertices[i + 1];
 		float f3 = vertices[i + 2];
-		//std::cout << "" << f1 << ", " << f2 << ", " << f3 << "\n";
-		glm::vec3 temp = { f1,f2,f3 };
-		int index = vectorContains(vertexData, temp);
 
-		// just add regardless
-		//vertexData->push_back(temp);
-		//indexData->push_back(vertexData->size()-1);
+		// normal data
+		float n1 = vertices[i + 3];
+		float n2 = vertices[i + 4];
+		float n3 = vertices[i + 5];
+
+		// texture coordinate data
+		float t1 = vertices[i + 6];
+		float t2 = vertices[i + 7];
+
+		Vertex v = { {f1,f2,f3}, {n1,n2,n3}, {t1,t2} };
+
+		int index = vectorContains(vertexData, v);
 
 		if (index >= 0) {
-			indexData->push_back(vertexData->size() - 1);
+			indexData->push_back(index);
 		}
 		else {
-			vertexData->push_back(temp);
+			vertexData->push_back(v);
 			indexData->push_back(vertexData->size()-1);
 		}
-
-		//// if in the array, set the ibo to the index
-		//if (index >= 0) {
-		//	indexData->push_back(index);
-		//}
-		//// not in the array
-		//else {
-		//	vertexData->push_back(temp);
-		//	indexData->push_back(vertexData->size());
-		//}
 
 	}
 

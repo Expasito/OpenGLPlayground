@@ -1,5 +1,8 @@
 #pragma once
 #include "../src/Includes.h"
+#include "../utils/Utils.h"
+
+struct Vertex;
 
 #include <vector>
 /*
@@ -27,7 +30,7 @@ public:
 
 	void loadMeshData(float* vertices, uint32_t verticesSize, uint32_t* indices, uint32_t indicesSize);
 
-	void loadMeshData(std::vector<glm::vec3>* vertices, std::vector<uint32_t>* indices);
+	void loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices);
 
 
 

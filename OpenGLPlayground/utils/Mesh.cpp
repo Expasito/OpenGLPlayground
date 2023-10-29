@@ -61,7 +61,7 @@ void Mesh::loadMeshData(float* vertices, uint32_t verticesSize, uint32_t* indice
 }
 
 
-void Mesh::loadMeshData(std::vector<glm::vec3>* vertices, std::vector<uint32_t>* indices) {
+void Mesh::loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) {
 
 	// For each buffer, check if we need to resize or not
 	// then send the data to the GPU
@@ -70,11 +70,11 @@ void Mesh::loadMeshData(std::vector<glm::vec3>* vertices, std::vector<uint32_t>*
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	if (vertices->size() > verticesBufferSize) {
 		verticesBufferSize = vertices->size();
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices->size(), glm::value_ptr((*vertices)[0]), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices->size(), &((*vertices)[0]), GL_DYNAMIC_DRAW);
 		std::cout << "Resize\n";
 	}
 	else {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * vertices->size(), glm::value_ptr((*vertices)[0]));
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * vertices->size(), &((*vertices)[0]));
 
 	}
 

@@ -6,6 +6,12 @@
 #include <chrono>
 #include <vector>
 
+struct Vertex {
+	glm::vec3 pos;
+	glm::vec3 normal;
+	glm::vec2 textCoord;
+};
+
 
 unsigned int compileShader(const char* vertex, const char* fragment);
 
@@ -30,7 +36,7 @@ void postRenderingSteps(bool log, GLFWwindow* window,
 void initProfile(int waitFrames,int numFrames, bool startProfile);
 
 void makeIBO(float* vertices, uint32_t verticesSize,
-	std::vector<glm::vec3>* vertexData,
+	std::vector<Vertex>* vertexData,
 	std::vector<uint32_t>* indexData);
 
 // this generates random vertices
