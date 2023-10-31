@@ -58,33 +58,41 @@ int main() {
 	std::vector<uint32_t> inds;
 	makeIBO(data, sizeof(data)/sizeof(float), &verts, &inds);
 
+	std::vector<Vertex> verts2;
+	std::vector<uint32_t> inds2;
+	makeIBO(cubeVertices, cubeVertsSize / sizeof(float), &verts2, &inds);
+
+	Mesh mesh1;
 	Mesh mesh2;
 
 	std::vector<Vertex>* verts_ = &verts;
 	std::vector<uint32_t>* inds_ = &inds;
 
+	mesh1.loadMeshData(&verts2, &inds2);
 	mesh2.loadMeshData(&verts, &inds);
 
-	for (int i = 0; i < verts.size(); i++) {
-		Vertex v = verts.at(i);
+	for (int i = 0; i < verts2.size(); i++) {
+		Vertex v = verts2.at(i);
 		std::cout << v.pos.x << " " << v.pos.y << " " << v.pos.z << ", " << v.normal.x << " " << v.normal.y << " " << v.normal.z << ", " << v.textCoord.x << " " << v.textCoord.y << "\n";
 	}
 
-	for (int i = 0; i < inds.size(); i++) {
-		std::cout << inds.at(i) << "\n";
+	for (int i = 0; i < inds2.size(); i++) {
+		std::cout << inds2.at(i) << "\n";
 	}
 
-	//exit(1);
+	exit(1);
 
 
 	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
 
 	Material m2({1,0,0}, {2,0,0}, {0,0,0}, 10, 1);
 
+	Component c2(&mesh1, &m1, { 0,5,0 }, { 0,0,0 }, { 1,1,1 });
 	Component c3(&mesh2, &m1, {0,0,5}, {0,90,0}, {2,2,2});
 	Component c4(&mesh2, &m2, {-5,-5,0}, {45,45,45}, {3,3,3});
 
 	Model m;
+	m.add(&c2);
 	m.add(&c3);
 	m.add(&c4);
 
@@ -310,6 +318,8 @@ int main() {
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+
+		c2.draw();
 
 
 
