@@ -60,13 +60,11 @@ int main() {
 
 	std::vector<Vertex> verts2;
 	std::vector<uint32_t> inds2;
-	makeIBO(cubeVertices, cubeVertsSize / sizeof(float), &verts2, &inds);
+	makeIBO(cubeVertices, cubeVertsSize / sizeof(float), &verts2, &inds2);
 
 	Mesh mesh1;
 	Mesh mesh2;
 
-	std::vector<Vertex>* verts_ = &verts;
-	std::vector<uint32_t>* inds_ = &inds;
 
 	mesh1.loadMeshData(&verts2, &inds2);
 	mesh2.loadMeshData(&verts, &inds);
@@ -80,7 +78,7 @@ int main() {
 		std::cout << inds2.at(i) << "\n";
 	}
 
-	exit(1);
+	//exit(1);
 
 
 	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
@@ -88,13 +86,13 @@ int main() {
 	Material m2({1,0,0}, {2,0,0}, {0,0,0}, 10, 1);
 
 	Component c2(&mesh1, &m1, { 0,5,0 }, { 0,0,0 }, { 1,1,1 });
-	Component c3(&mesh2, &m1, {0,0,5}, {0,90,0}, {2,2,2});
-	Component c4(&mesh2, &m2, {-5,-5,0}, {45,45,45}, {3,3,3});
+	Component c3(&mesh2, &m1, {0,0,5}, {0,0,0}, {1,1,1});
+	//Component c4(&mesh2, &m2, {-5,-5,0}, {45,45,45}, {3,3,3});
 
 	Model m;
 	m.add(&c2);
-	m.add(&c3);
-	m.add(&c4);
+	//m.add(&c3);
+	//m.add(&c4);
 
 
 	//Model m;
@@ -259,16 +257,19 @@ int main() {
 
 
 
-	uint32_t allData;
-	glGenBuffers(1, &allData);
-	glBindBuffer(GL_ARRAY_BUFFER, allData);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts.size(), &verts[0], GL_DYNAMIC_DRAW);
+	//uint32_t allData;
+	//glGenBuffers(1, &allData);
+	//glBindBuffer(GL_ARRAY_BUFFER, allData);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts2.size(), &verts2[0], GL_DYNAMIC_DRAW);
+	//std::cout << "Size: " << sizeof(Vertex) << " " << sizeof(glm::vec3) << "\n";
 
-	uint32_t allInds;
-	glGenBuffers(1, &allInds);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, allInds);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
+	//uint32_t allInds;
+	//glGenBuffers(1, &allInds);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, allInds);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds2.size(), &inds2[0], GL_DYNAMIC_DRAW);
 
+	//checkErrors();
+	//exit(1);
 
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
@@ -303,23 +304,11 @@ int main() {
 
 
 
-		//c1.draw();
-		//c2.draw();
 
-
-		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(c3.model));
-
-		glBindBuffer(GL_ARRAY_BUFFER, allData);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 3));
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 6));
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, allInds);
-
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
 		c2.draw();
+		c3.draw();
 
 
 

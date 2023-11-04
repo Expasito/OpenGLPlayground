@@ -6,7 +6,7 @@ void Mesh::init(int sizeVBO, int sizeIBO) {
 	glGenBuffers(1, &ibo);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeVBO, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * sizeVBO, NULL, GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, ibo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(uint32_t) * sizeIBO, NULL, GL_DYNAMIC_DRAW);
@@ -16,8 +16,8 @@ void Mesh::init(int sizeVBO, int sizeIBO) {
 Mesh::Mesh() {
 
 	// set some default sizes
-	verticesBufferSize = 100;
-	indicesBufferSize = 200;
+	verticesBufferSize = 1;
+	indicesBufferSize = 1;
 
 	init(verticesBufferSize, indicesBufferSize);
 	
@@ -70,11 +70,11 @@ void Mesh::loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* in
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	if (vertices->size() > verticesBufferSize) {
 		verticesBufferSize = vertices->size();
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices->size(), &((*vertices)[0]), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices->size(), &(*vertices)[0], GL_DYNAMIC_DRAW);
 		std::cout << "Resize\n";
 	}
 	else {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * vertices->size(), &((*vertices)[0]));
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * vertices->size(), &(*vertices)[0]);
 
 	}
 
