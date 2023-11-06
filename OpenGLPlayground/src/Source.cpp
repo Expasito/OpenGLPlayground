@@ -78,39 +78,23 @@ int main() {
 		std::cout << inds2.at(i) << "\n";
 	}
 
-	//exit(1);
 
 
 	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
 
-	Material m2({1,0,0}, {2,0,0}, {0,0,0}, 10, 1);
+	Material m2({.9,.1,.3}, {.5,.5,.2}, {.2,.4,.2}, 10, 1);
 
-	Component c2(&mesh1, &m1, { 0,5,0 }, { 0,0,0 }, { 1,1,1 });
-	Component c3(&mesh2, &m1, {0,0,5}, {0,0,0}, {1,1,1});
-	//Component c4(&mesh2, &m2, {-5,-5,0}, {45,45,45}, {3,3,3});
+	Component c1(&mesh1, &m1, { 5,0,0 }, { 0,0,0 }, { 1,1,1 });
+	Component c2(&mesh2, &m1, { 0,5,0 }, { 0,0,0 }, { 1,1,1 });
+
+	Component c3(&mesh1, &m2, { -5,0,0 }, { 0,0,0 }, { 1,1,1 });
+	Component c4(&mesh2, &m2, {0,-5,0}, {0,0,0}, {1,1,1});
 
 	Model m;
+	m.add(&c1);
 	m.add(&c2);
-	//m.add(&c3);
-	//m.add(&c4);
-
-
-	//Model m;
-
-	//Component comp(&mesh,&m1, { 4,0,0 }, { 0,90,0 }, { 2,1,1 });
-
-	//Component comp2(&mesh, 
-	//	&m2, 
-	//	{-4,-3,2},
-	//	{0,45,30},
-	//	{1,2,1}
-	//);
-
-	//Component comp3(&mesh2, &m1, { 0,0,0 }, { 0,0,0 }, { .5,.5,.5 });
-
-	//m.add(&comp);
-	//m.add(&comp2);
-	//m.add(&comp3);
+	m.add(&c3);
+	m.add(&c4);
 
 
 
@@ -237,8 +221,6 @@ int main() {
 	updateProjView(&proj, &view, width, height);
 
 
-	//Material mat = { {1,0,0},{0,0,0},{1,1,1},10.0, 0 };
-
 
 	matAlbedo = glGetUniformLocation(program, "material.albedo");
 	matDiffuse = glGetUniformLocation(program, "material.diffuse");
@@ -257,20 +239,6 @@ int main() {
 
 
 
-	//uint32_t allData;
-	//glGenBuffers(1, &allData);
-	//glBindBuffer(GL_ARRAY_BUFFER, allData);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts2.size(), &verts2[0], GL_DYNAMIC_DRAW);
-	//std::cout << "Size: " << sizeof(Vertex) << " " << sizeof(glm::vec3) << "\n";
-
-	//uint32_t allInds;
-	//glGenBuffers(1, &allInds);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, allInds);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds2.size(), &inds2[0], GL_DYNAMIC_DRAW);
-
-	//checkErrors();
-	//exit(1);
-
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
 
@@ -287,42 +255,8 @@ int main() {
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 
-
-
-
-
-
-
-		//// We need to standardize what is required for input vertices
-		//glUniform1i(glGetUniformLocation(program, "texturing"), 1);
-		//glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(glm::translate(trans, { 0,5,0 })));
-
-		//glBindBuffer(GL_ARRAY_BUFFER, cubeBuff);
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
-		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-
-
-
-
-		c2.draw();
-		c3.draw();
-
-
-
-		//m.draw();
-
-		//m1.drawAll();
-		//m.draw();
-
-		//comp.draw();
-		//comp2.draw();
-
-		//for (void* c : m.components) {
-		//	((Component*)c)->draw();
-		//}
+		// draw all components in the model
+		m.draw();
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);

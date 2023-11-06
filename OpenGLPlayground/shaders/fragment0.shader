@@ -26,14 +26,24 @@ struct Light {
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
+	vec3 position;
+	// does position mean position or direction
+	int directional;
 };
 
-Light light = { {0,0,0}, {.5,.5,.5}, {.25,.25,.25} };
+Light light = { {.3,.3,.3}, {.75,.75,.75}, {.25,.25,.25}, {-1,-1,-1}, 1 };
 
-vec3 calcLight(vec3 albedo, vec3 diffuse, vec3 specular, float shininess) {
-	vec3 ambient = light.ambient * albedo;
-	return ambient;
-	// more lighting here
+vec3 calcLight() {
+	vec3 ambient = light.ambient * material.albedo;
+
+	vec3 norm = normalize(normal_);
+	vec3 lightDir = normalize(-light.position);
+	float diff = max(dot(norm, lightDir), 0);
+	vec3 diffuse = light.diffuse * (diff * material.diffuse);
+
+
+	vec3 result = (ambient + (diffuse));
+	return result;
 }
 
 void main() {
@@ -50,7 +60,8 @@ void main() {
 	//	FragColor = vec4(result,1);
 	//}
 
+	FragColor = vec4(calcLight(), 1);
 
-	FragColor = vec4(abs(normal_.x), abs(normal_.y), abs(normal_.z), 1);
+	//FragColor = vec4(abs(normal_.x), abs(normal_.y), abs(normal_.z), 1);
 	//FragColor = vec4(textCoord_.x, textCoord_.y, 1, 1);
 }
