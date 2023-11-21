@@ -5,7 +5,17 @@ const int height = 800;
 
 
 
+std::ostream& operator<<(std::ostream& os, const glm::vec3& vec)
+{
+	os << vec.x << " " << vec.y << " " << vec.z << " ";
+	return os;
+}
 
+std::ostream& operator<<(std::ostream& os, const glm::vec2& vec)
+{
+	os << vec.x << " " << vec.y << " " << " ";
+	return os;
+}
 
 
 
@@ -44,13 +54,13 @@ int main() {
 
 
 	float data[] = {
-		-1,-1,-1, -1,-1,-1, 0,0,
-		-1,1,-1, -1,1,-1, 0,1,
-		1,-1,-1, 1,-1,-1, 1,0,
+		-1.0,-1.0,-1.0, -1.0,-1.0,-1.0, 0,0,
+		-1.0,1.0,-1.0, -1.0,1.0,-1.0, 0.0,1.0,
+		1.0,-1.0,-1.0, 1.0,-1.0,-1.0, 1.0,0.0,
 
-		-1,1,-1, -1,1,-1, 0,1,
-		1,-1,-1, 1,-1,-1, 1,0,
-		1,1,-1, 1,1,-1, 1,1
+		-1.0,1.0,-1.0, -1.0,1.0,-1.0, 0.0,1.0,
+		1.0,-1.0,-1.0, 1.0,-1.0,-1.0, 1.0,0.0,
+		1.0,1.0,-1.0, 1.0,1.0,-1.0, 1.0,1.0
 	};
 
 
@@ -70,8 +80,10 @@ int main() {
 	mesh2.loadMeshData(&verts, &inds);
 
 	for (int i = 0; i < verts2.size(); i++) {
-		Vertex v = verts2.at(i);
-		std::cout << v.pos.x << " " << v.pos.y << " " << v.pos.z << ", " << v.normal.x << " " << v.normal.y << " " << v.normal.z << ", " << v.textCoord.x << " " << v.textCoord.y << "\n";
+		Vertex v = verts2[i];
+		std::cout << "(" << v.pos << ", " << v.normal << ", " << v.textCoord << ")\n";
+		//Vertex v = verts2.at(i);
+		//std::cout << v.pos.x << " " << v.pos.y << " " << v.pos.z << ", " << v.normal.x << " " << v.normal.y << " " << v.normal.z << ", " << v.textCoord.x << " " << v.textCoord.y << "\n";
 	}
 
 	for (int i = 0; i < inds2.size(); i++) {
@@ -237,7 +249,58 @@ int main() {
 	glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
 
 
+	// this will combine objects of the same material
 
+	uint32_t batchBuffer;
+	uint32_t batchIBO;
+	glGenBuffers(1, &batchBuffer);
+	glGenBuffers(1, &batchIBO);
+	glBindBuffer(GL_ARRAY_BUFFER, batchBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (verts.size() + verts2.size()), NULL, GL_DYNAMIC_DRAW);
+
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts.size(), &verts[0], GL_DYNAMIC_DRAW);
+	
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * verts.size(), &verts[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts.size(), sizeof(Vertex) * verts2.size(), &verts2[0]);
+
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (inds.size() + inds2.size()), NULL , GL_DYNAMIC_DRAW);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
+
+
+	std::vector<uint32_t> cpy(inds2);
+	// add the number of initial vertices to the index so we displace to the right locations
+	int dx = verts.size();
+	for (int i = 0; i < cpy.size(); i++) {
+		cpy[i] += dx;
+	}
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * inds.size(), &inds[0]);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds.size(),sizeof(uint32_t) * inds2.size(), &cpy[0]);
+
+
+
+
+	uint32_t* cheese = new uint32_t[inds.size() + inds2.size()];
+	glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * (inds.size() + inds2.size()), cheese);
+
+	Vertex* bacon = new Vertex[verts.size() + verts2.size()];
+	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * (verts.size() + verts2.size()), bacon);
+
+	for (int i = 0; i < inds.size() + inds2.size(); i++) {
+		std::cout << cheese[i] << " ";
+	}
+	std::cout << "\n";
+	for (int i = 0; i < (verts.size() + verts2.size()); i++) {
+		Vertex v = bacon[i];
+		std::cout << i << " : " << "(" << v.pos << ", " << v.normal << ", " << v.textCoord << ")\n";
+	}
+
+
+
+	glm::mat4 model(1);
+	// no displacement
+	model = glm::translate(trans, { 0,0,0 });
 
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
@@ -255,8 +318,29 @@ int main() {
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 
-		// draw all components in the model
-		m.draw();
+		 //draw all components in the model
+		//m.draw();
+
+
+		glBindBuffer(GL_ARRAY_BUFFER, batchBuffer);
+		// give position, normal and texture coordinate data
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 1));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 2));
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
+
+		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+		m1.bindAttributes();
+
+		GLvoid* a = (GLvoid*)(4);
+		//glDrawElements(GL_TRIANGLES, inds2.size(), GL_UNSIGNED_INT, a);
+
+		glDrawElements(GL_TRIANGLES ,  inds.size() + inds2.size(), GL_UNSIGNED_INT, 0);
+
+
+		//m.draw();
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);

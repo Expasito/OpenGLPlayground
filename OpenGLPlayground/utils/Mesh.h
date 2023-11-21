@@ -17,8 +17,8 @@ public:
 	unsigned int vbo;
 	unsigned int ibo;
 
-	float* vertices;
-	unsigned int* indices;
+	//float* vertices;
+	//unsigned int* indices;
 
 	uint32_t verticesBufferSize;
 	uint32_t indicesBufferSize;
