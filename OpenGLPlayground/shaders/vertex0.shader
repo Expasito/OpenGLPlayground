@@ -30,7 +30,9 @@ void main() {
 	//textCoords = textCoords_;
 
 	// copy the matrix and negate the x component for the transforms
-	mat4 model_ = model;
+	//mat4 model_ = model;
+
+	mat4 model_ = models[draw];
 	model_[3][0] *= -1;
 
 	gl_Position = projection * view * model_ * vec4(pos, 1);

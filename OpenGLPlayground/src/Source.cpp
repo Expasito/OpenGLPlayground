@@ -176,7 +176,15 @@ int main() {
 	unsigned int models;
 	models = glGetUniformLocation(program, "models");
 	std::vector<glm::mat4> models_;
-	models_.push_back(glm::translate(trans, glm::vec3(1, 1, 1)));
+	models_.push_back(glm::translate(trans, glm::vec3(-5, 0, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(5, 0, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(0, -5, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(0, 5, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(5, 5, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(5, -5, 0)));
+
+
+
 	models_.push_back(glm::translate(trans, glm::vec3(4, 4, 1)) * glm::rotate(trans, glm::radians(30.0f), glm::vec3(1, 0, 0)));
 	models_.push_back(glm::translate(trans, glm::vec3(1, -4, 1)));
 	models_.push_back(glm::translate(trans, glm::vec3(-5, -5, -5)));
@@ -302,6 +310,15 @@ int main() {
 	// no displacement
 	model = glm::translate(trans, { 0,0,0 });
 
+
+	// NEED TO FIGURE THIS OUT
+
+	// we have the number of indicies to draw here
+	GLsizei count__[] = { inds.size(), inds2.size()*2};
+
+	// start at 0 and then inds size bc those are the cutoffs for index buffers
+	GLvoid* start__[] = { (GLvoid*)(0) , (GLvoid*)(sizeof(uint32_t) *inds.size())};
+
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
 
@@ -334,10 +351,13 @@ int main() {
 
 		m1.bindAttributes();
 
-		GLvoid* a = (GLvoid*)(4);
+		//GLvoid* a = (GLvoid*)(4);
 		//glDrawElements(GL_TRIANGLES, inds2.size(), GL_UNSIGNED_INT, a);
 
-		glDrawElements(GL_TRIANGLES ,  inds.size() + inds2.size(), GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_TRIANGLES ,  inds.size() + inds2.size(), GL_UNSIGNED_INT, 0);
+
+		//glMultiDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexStart, 2);
+		glMultiDrawElements(GL_TRIANGLES, count__, GL_UNSIGNED_INT, start__, 2);
 
 
 		//m.draw();
