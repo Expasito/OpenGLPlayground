@@ -33,5 +33,5 @@ void Component::draw() {
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	material->bindAttributes();
-	glDrawElements(GL_TRIANGLES, mesh->indicesBufferSize, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, mesh->indicesMaxCapacity, GL_UNSIGNED_INT, 0);
 };

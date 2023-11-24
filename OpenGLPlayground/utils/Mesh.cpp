@@ -16,20 +16,20 @@ void Mesh::init(int sizeVBO, int sizeIBO) {
 Mesh::Mesh() {
 
 	// set some default sizes
-	verticesBufferSize = 1;
-	indicesBufferSize = 1;
+	verticesMaxCapacity = 1;
+	indicesMaxCapacity = 1;
 
-	init(verticesBufferSize, indicesBufferSize);
+	init(verticesMaxCapacity, indicesMaxCapacity);
 	
 }
 
 Mesh::Mesh(int sizeVBO, int sizeIBO) {
 
 	// set the initial sizes
-	verticesBufferSize = sizeVBO;
-	indicesBufferSize = sizeIBO;
+	verticesMaxCapacity = sizeVBO;
+	indicesMaxCapacity = sizeIBO;
 
-	init(verticesBufferSize, indicesBufferSize);
+	init(verticesMaxCapacity, indicesMaxCapacity);
 }
 
 
@@ -40,8 +40,9 @@ void Mesh::loadMeshData(float* vertices, uint32_t verticesSize, uint32_t* indice
 	
 	// handle vertices first
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	if (verticesSize > verticesBufferSize) {
-		verticesBufferSize = verticesSize;
+	if (verticesSize > verticesMaxCapacity) {
+		verticesMaxCapacity = verticesSize;
+		verticesCurSize = verticesSize;
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * verticesSize, vertices, GL_DYNAMIC_DRAW);
 	}
 	else {
@@ -51,8 +52,9 @@ void Mesh::loadMeshData(float* vertices, uint32_t verticesSize, uint32_t* indice
 	// now for indices
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	if (indicesSize > indicesBufferSize) {
-		indicesBufferSize = indicesSize;
+	if (indicesSize > indicesMaxCapacity) {
+		indicesMaxCapacity = indicesSize;
+		indicesCurSize = indicesSize;
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indicesSize, indices, GL_DYNAMIC_DRAW);
 	}
 	else {
@@ -68,8 +70,9 @@ void Mesh::loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* in
 	// 
 	// handle vertices first
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	if (vertices->size() > verticesBufferSize) {
-		verticesBufferSize = vertices->size();
+	if (vertices->size() > verticesMaxCapacity) {
+		verticesMaxCapacity = vertices->size();
+		//vertices
 		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices->size(), &(*vertices)[0], GL_DYNAMIC_DRAW);
 		std::cout << "Resize\n";
 	}
@@ -83,12 +86,56 @@ void Mesh::loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* in
 	// Need to finish implementing
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	if (indices->size() > indicesBufferSize) {
-		indicesBufferSize = indices->size();
+	if (indices->size() > indicesMaxCapacity) {
+		indicesMaxCapacity = indices->size();
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indices->size(), &(*indices)[0], GL_DYNAMIC_DRAW);
 		std::cout << "Resize\n";
 	}
 	else {
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * indices->size(), &(*indices)[0]);
+	}
+}
+
+void Mesh::appendData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) {
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	if (vertices->size() + verticesCurSize >= verticesMaxCapacity) {
+		unsigned int copy;
+		glGenBuffers(1, &copy);
+		glBindBuffer(GL_COPY_READ_BUFFER, copy);
+		glBufferData(GL_COPY_READ_BUFFER, sizeof(Vertex) * verticesCurSize, NULL, GL_DYNAMIC_DRAW);
+		glCopyBufferSubData(GL_ARRAY_BUFFER, GL_COPY_READ_BUFFER, 0, 0, sizeof(Vertex) * verticesCurSize);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (vertices->size() + verticesCurSize), NULL, GL_DYNAMIC_DRAW);
+		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, sizeof(Vertex) * verticesCurSize);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verticesCurSize, sizeof(Vertex) * vertices->size(), &(*vertices)[0]);
+		glDeleteBuffers(1, &copy);
+
+		verticesCurSize += vertices->size();
+		verticesMaxCapacity = verticesCurSize;
+	}
+	else {
+		// just copy the data from the previous cuttof and upate
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verticesCurSize, sizeof(Vertex) * vertices->size(), &(*vertices)[0]);
+		verticesCurSize += vertices->size();
+	}
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	if (indices->size() + indicesCurSize >= indicesMaxCapacity) {
+		unsigned int copy;
+		glGenBuffers(1, &copy);
+		glBindBuffer(GL_COPY_READ_BUFFER, copy);
+		glBufferData(GL_COPY_READ_BUFFER, sizeof(uint32_t) * indicesCurSize, NULL, GL_DYNAMIC_DRAW);
+		glCopyBufferSubData(GL_ELEMENT_ARRAY_BUFFER, GL_COPY_READ_BUFFER, 0, 0, sizeof(uint32_t) * indicesCurSize);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (indices->size() + indicesCurSize), NULL, GL_DYNAMIC_DRAW);
+		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ELEMENT_ARRAY_BUFFER, 0, 0, sizeof(uint32_t) * indicesCurSize);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indicesCurSize, sizeof(uint32_t) * indices->size(), &(*indices)[0]);
+		glDeleteBuffers(1, &copy);
+
+		indicesCurSize += indices->size();
+		indicesMaxCapacity = indicesCurSize;
+	}
+	else {
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indicesCurSize, sizeof(uint32_t) * indices->size(), &(*indices)[0]);
+		indicesCurSize += indices->size();
 	}
 }

@@ -14,14 +14,17 @@ class Mesh
 {
 public:
 
+	// OpenGL buffer numbers
 	unsigned int vbo;
 	unsigned int ibo;
 
-	//float* vertices;
-	//unsigned int* indices;
+	// what is the max capacity of the buffer
+	uint32_t verticesMaxCapacity;
+	uint32_t indicesMaxCapacity;
 
-	uint32_t verticesBufferSize;
-	uint32_t indicesBufferSize;
+	// what is the current capacity
+	uint32_t verticesCurSize;
+	uint32_t indicesCurSize;
 
 
 	Mesh();
@@ -32,7 +35,7 @@ public:
 
 	void loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices);
 
-
+	void appendData(std::vector <Vertex>* vertices, std::vector<uint32_t>* indices);
 
 
 private:
