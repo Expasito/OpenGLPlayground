@@ -171,34 +171,6 @@ int main() {
 
 
 
-
-	// Make model matrices and send them over
-	unsigned int models;
-	models = glGetUniformLocation(program, "models");
-	std::vector<glm::mat4> models_;
-	models_.push_back(glm::translate(trans, glm::vec3(-5, 0, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(5, 0, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(0, -5, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(0, 5, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(5, 5, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(5, -5, 0)));
-
-
-
-	models_.push_back(glm::translate(trans, glm::vec3(4, 4, 1)) * glm::rotate(trans, glm::radians(30.0f), glm::vec3(1, 0, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(1, -4, 1)));
-	models_.push_back(glm::translate(trans, glm::vec3(-5, -5, -5)));
-	models_.push_back(glm::translate(trans, glm::vec3(5, 5, 5)));
-	models_.push_back(glm::rotate(trans, glm::radians(30.0f), glm::vec3(1, 0, 0)));
-
-	for (int i = 0; i < 100000; i++) {
-		models_.push_back(glm::translate(trans, glm::vec3(rand() % 10, rand() % 10, rand() % 10)));
-	}
-
-	// send models to the gpu
-	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
-
-
 	//unsigned int texture1 = loadTexture("textures/StonePath.png",
 	//	GL_MIRRORED_REPEAT,
 	//	GL_MIRRORED_REPEAT,
@@ -311,13 +283,45 @@ int main() {
 	model = glm::translate(trans, { 0,0,0 });
 
 
+	// Make model matrices and send them over
+	unsigned int models;
+	models = glGetUniformLocation(program, "models");
+
+
 	// NEED TO FIGURE THIS OUT
 
 	// we have the number of indicies to draw here
-	GLsizei count__[] = { inds.size(), inds2.size()*2};
+	std::vector<GLsizei> count__;
+	count__.push_back(inds.size());
+	count__.push_back(inds2.size() * 2);
+	count__.push_back(inds.size());
+	count__.push_back(inds2.size() * 2);
+	count__.push_back(inds.size());
+	count__.push_back(inds2.size() * 2);
+
 
 	// start at 0 and then inds size bc those are the cutoffs for index buffers
-	GLvoid* start__[] = { (GLvoid*)(0) , (GLvoid*)(sizeof(uint32_t) *inds.size())};
+	std::vector<GLvoid*> start__;
+	start__.push_back(0);
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
+	start__.push_back(0);
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
+	start__.push_back(0);
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
+
+
+	
+	std::vector<glm::mat4> models_;
+	models_.push_back(glm::translate(trans, glm::vec3(-5, 0, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(5, 0, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(0, -5, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(0, 5, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(5, 5, 0)));
+	models_.push_back(glm::translate(trans, glm::vec3(5, -5, 0)));
+
+	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
+
+
 
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
@@ -357,7 +361,7 @@ int main() {
 		//glDrawElements(GL_TRIANGLES ,  inds.size() + inds2.size(), GL_UNSIGNED_INT, 0);
 
 		//glMultiDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexStart, 2);
-		glMultiDrawElements(GL_TRIANGLES, count__, GL_UNSIGNED_INT, start__, 2);
+		glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
 
 
 		//m.draw();
