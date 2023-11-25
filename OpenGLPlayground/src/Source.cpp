@@ -13,7 +13,7 @@ std::ostream& operator<<(std::ostream& os, const glm::vec3& vec)
 
 std::ostream& operator<<(std::ostream& os, const glm::vec2& vec)
 {
-	os << vec.x << " " << vec.y << " " << " ";
+	os << vec.x << " " << vec.y << " ";
 	return os;
 }
 
@@ -169,15 +169,6 @@ int main() {
 
 
 
-
-
-	//unsigned int texture1 = loadTexture("textures/StonePath.png",
-	//	GL_MIRRORED_REPEAT,
-	//	GL_MIRRORED_REPEAT,
-	//	GL_LINEAR_MIPMAP_LINEAR,
-	//	GL_LINEAR);
-
-
 	int texture_units;
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
 
@@ -229,6 +220,13 @@ int main() {
 	glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
 
 
+
+	Mesh batch(1, 1);
+	batch.appendData(&verts, &inds);
+	//exit(1);
+	checkErrors();
+	exit(1);
+
 	// this will combine objects of the same material
 
 	uint32_t batchBuffer;
@@ -238,7 +236,6 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, batchBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (verts.size() + verts2.size()), NULL, GL_DYNAMIC_DRAW);
 
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts.size(), &verts[0], GL_DYNAMIC_DRAW);
 	
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * verts.size(), &verts[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts.size(), sizeof(Vertex) * verts2.size(), &verts2[0]);
@@ -246,7 +243,6 @@ int main() {
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (inds.size() + inds2.size()), NULL , GL_DYNAMIC_DRAW);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds.size(), &inds[0], GL_DYNAMIC_DRAW);
 
 
 	std::vector<uint32_t> cpy(inds2);
@@ -257,6 +253,7 @@ int main() {
 	}
 	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * inds.size(), &inds[0]);
 	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds.size(),sizeof(uint32_t) * inds2.size(), &cpy[0]);
+
 
 
 
@@ -320,7 +317,6 @@ int main() {
 	models_.push_back(glm::translate(trans, glm::vec3(5, -5, 0)));
 
 	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
-
 
 
 	while (!glfwWindowShouldClose(window)) {

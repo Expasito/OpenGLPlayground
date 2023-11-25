@@ -99,11 +99,15 @@ void Mesh::loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* in
 void Mesh::appendData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) {
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	
 	if (vertices->size() + verticesCurSize >= verticesMaxCapacity) {
 		unsigned int copy;
 		glGenBuffers(1, &copy);
 		glBindBuffer(GL_COPY_READ_BUFFER, copy);
-		glBufferData(GL_COPY_READ_BUFFER, sizeof(Vertex) * verticesCurSize, NULL, GL_DYNAMIC_DRAW);
+		glBufferData(GL_COPY_READ_BUFFER, sizeof(Vertex) * (verticesCurSize + 1), NULL, GL_DYNAMIC_DRAW);
+		checkErrors();
+		std::cout << "No errors\n";
+		exit(1);
 		glCopyBufferSubData(GL_ARRAY_BUFFER, GL_COPY_READ_BUFFER, 0, 0, sizeof(Vertex) * verticesCurSize);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (vertices->size() + verticesCurSize), NULL, GL_DYNAMIC_DRAW);
 		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, sizeof(Vertex) * verticesCurSize);
@@ -112,6 +116,7 @@ void Mesh::appendData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indi
 
 		verticesCurSize += vertices->size();
 		verticesMaxCapacity = verticesCurSize;
+
 	}
 	else {
 		// just copy the data from the previous cuttof and upate
@@ -124,7 +129,7 @@ void Mesh::appendData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indi
 		unsigned int copy;
 		glGenBuffers(1, &copy);
 		glBindBuffer(GL_COPY_READ_BUFFER, copy);
-		glBufferData(GL_COPY_READ_BUFFER, sizeof(uint32_t) * indicesCurSize, NULL, GL_DYNAMIC_DRAW);
+		glBufferData(GL_COPY_READ_BUFFER, sizeof(uint32_t) * indicesMaxCapacity, NULL, GL_DYNAMIC_DRAW);
 		glCopyBufferSubData(GL_ELEMENT_ARRAY_BUFFER, GL_COPY_READ_BUFFER, 0, 0, sizeof(uint32_t) * indicesCurSize);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (indices->size() + indicesCurSize), NULL, GL_DYNAMIC_DRAW);
 		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ELEMENT_ARRAY_BUFFER, 0, 0, sizeof(uint32_t) * indicesCurSize);
@@ -138,4 +143,5 @@ void Mesh::appendData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indi
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indicesCurSize, sizeof(uint32_t) * indices->size(), &(*indices)[0]);
 		indicesCurSize += indices->size();
 	}
+
 }
