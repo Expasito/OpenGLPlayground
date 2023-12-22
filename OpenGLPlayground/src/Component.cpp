@@ -7,6 +7,8 @@ Component::Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::v
 	this->rotate = rotate;
 	this->scalate = scalate;
 	updateModelMatrix();
+
+	// add this model to the material so it knows to draw this too
 	material->add(this);
 };
 

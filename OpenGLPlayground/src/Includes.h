@@ -16,6 +16,7 @@
 
 #include <Soil/SOIL.h>
 #include <vector>
+#include <map>
 
 #include "Component.h"
 #include "Material.h"

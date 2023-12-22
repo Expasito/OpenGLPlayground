@@ -1,4 +1,6 @@
 #include "Includes.h"
+#include <glm/gtx/string_cast.hpp>
+
 const int width = 800;
 const int height = 800;
 
@@ -90,26 +92,117 @@ int main() {
 		std::cout << inds2.at(i) << "\n";
 	}
 
+	for (int i = 0; i < 35; i++) {
+		unsigned int texture0 = loadTexture("textures/GrassBlock.png",
+			GL_MIRRORED_REPEAT,
+			GL_MIRRORED_REPEAT,
+			GL_LINEAR_MIPMAP_LINEAR,
+			GL_LINEAR);
+	}
+
+	//glActiveTexture(GL_TEXTURE0);
+	unsigned int texture0 = loadTexture("textures/GrassBlock.png",
+		GL_MIRRORED_REPEAT,
+		GL_MIRRORED_REPEAT,
+		GL_LINEAR_MIPMAP_LINEAR,
+		GL_LINEAR);
 
 
+	//glActiveTexture(GL_TEXTURE0 + 3);
+	unsigned int texture1 = loadTexture("textures/OldRock.png",
+		GL_MIRRORED_REPEAT,
+		GL_MIRRORED_REPEAT,
+		GL_LINEAR_MIPMAP_LINEAR,
+		GL_LINEAR);
+
+
+
+
+	// now assign which textures belong to which index. So if the material
+	// has index 0, then it gets the texture with that index associated with it
+	textureMap[0] = texture0;
+	textureMap[3] = texture1;
+
+
+	// Create 3 materials to draw with
+	// Order: Albedo, diffuse, specular, shininess, areTextures
+	// If aretextures is 1, albedo.x is which texture to use
 	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
+	Material m2({0, .1,.3}, {.5,.5,.2}, {.2,.4,.2}, 10, 1);
+	Material m3({ 3, .5,.5 }, { .5,.5,.2 }, { .2,.4,.2 }, 10, 1);
 
-	Material m2({.9,.1,.3}, {.5,.5,.2}, {.2,.4,.2}, 10, 1);
 
-	Component c1(&mesh1, &m1, { 5,0,0 }, { 0,0,0 }, { 1,1,1 });
-	Component c2(&mesh2, &m1, { 0,5,0 }, { 0,0,0 }, { 1,1,1 });
 
-	Component c3(&mesh1, &m2, { -5,0,0 }, { 0,0,0 }, { 1,1,1 });
-	Component c4(&mesh2, &m2, {0,-5,0}, {0,0,0}, {1,1,1});
 
+	// show axis
+	glm::vec3 x = {1,0,0};
+	glm::vec3 y = glm::cross(x, glm::vec3(0,0,-1));
+	glm::vec3 z = glm::cross(x, y);
+
+	// create a bunch of components to add to a model
+	Component c1(&mesh1, &m1, x, { 0,0,0 }, { 10,.0125,.0125 });
+	Component c2(&mesh1, &m1, y, { 0,0,0 }, { .0125,10,.0125 });
+
+	Component c3(&mesh1, &m1, z, { 0,0,0 }, { .0125,.0125,10 });
+
+
+	
+	glm::vec3 dir = 10.0f * glm::vec3(1.0f,.0f,.0f);
+
+	Component p1(&mesh1, &m2, dir, { 0,0,0 }, { 1,1,1});
+
+	glm::vec3 x1 = (dir);
+	glm::vec3 y1 = (glm::cross(dir, glm::vec3(0, 0, -1)));
+	//glm::vec3 y = {2, -1, 0};
+	glm::vec3 z1 = (glm::cross(x1, y1));
+
+	glm::mat3 B = { {x1}, {y1}, {z1} };
+
+	std::cout << "B: " << glm::to_string(B) << "\n";
+
+	glm::mat3 BInv = glm::inverse(B);
+
+
+	Component p2(&mesh1, &m2, y1, { 0,0,0 }, { .1,.1,.1 });
+	Component p3(&mesh1, &m2, z1, { 0,0,0 }, { .1,.1,.1 });
+
+	glm::vec3 point1(1.0f, 1.0f, 1.0f);
+	glm::vec3 point2(-10, 10, 10);
+	glm::vec3 point3(10, -10, 10);
+
+
+	Component point1_(&mesh1, &m3, 5.0f * point1, { 0,0,0 }, { 1,1,1 });
+	Component point2_(&mesh1, &m3, point2, { 0,0,0 }, { .1,.1,.1 });
+	Component point3_(&mesh1, &m3, point3, { 0,0,0 }, { .1,.1,.1 });
+
+
+	glm::vec3 new1_ = BInv * point1;
+	glm::vec3 new2_ = BInv * point2;
+	glm::vec3 new3_ = BInv * point3;
+
+
+	//std::cout << "Vec: " << glm::to_string(new1_) << "\n";
+
+	Component p4(&mesh1, &m3, new1_, { 0,0,0 }, { .5,.5,.5 });
+	Component p5(&mesh1, &m3, new2_, { 0,0,0 }, { .5,.5,.5 });
+	Component p6(&mesh1, &m3, new3_, { 0,0,0 }, { .5,.5,.5 });
+
+	std::cout << "Point1: " << glm::to_string(BInv * point1) << "\n";
+	std::cout << "Point2: " << glm::to_string(BInv * point2) << "\n";
+	std::cout << "Point3: " << glm::to_string(BInv * point3) << "\n";
+
+
+	// This is the model we are trying to build of the components
 	Model m;
 	m.add(&c1);
 	m.add(&c2);
 	m.add(&c3);
-	m.add(&c4);
+	m.add(&p1);
+
+	m.add(&point1_);
 
 
-
+	// enable certain vertex attributes
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
@@ -118,9 +211,8 @@ int main() {
 
 
 
-
+	// create our matricies for the camera
 	glm::mat4 trans(1);
-
 	glm::mat4 proj = glm::perspective(glm::radians(80.0f), (float)width/height, 0.0f, 10000.0f);
 	glm::mat4 view = glm::lookAt(glm::vec3(0, 1, 1), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
@@ -133,39 +225,18 @@ int main() {
 	modelLoc = glGetUniformLocation(program, "model");
 
 
-	std::cout << "Proj: " << projLoc << " View: " << viewLoc << " Model: " << modelLoc << "\n";
-
-
-	
 	std::chrono::high_resolution_clock::time_point start;
 	std::chrono::high_resolution_clock::time_point end;
 
-	for (int i = 0; i < 35; i++) {
-		unsigned int texture0 = loadTexture("textures/GrassBlock.png",
-			GL_MIRRORED_REPEAT,
-			GL_MIRRORED_REPEAT,
-			GL_LINEAR_MIPMAP_LINEAR,
-			GL_LINEAR);
 
-		glBindTextureUnit(i, texture0);
-		checkErrors();
-		
-	}
 
-	unsigned int texture0 = loadTexture("textures/GrassBlock.png",
-		GL_MIRRORED_REPEAT,
-		GL_MIRRORED_REPEAT,
-		GL_LINEAR_MIPMAP_LINEAR,
-		GL_LINEAR);
 
-	glBindTextureUnit(0, texture0);
 
-	unsigned int texture1 = loadTexture("textures/OldRock.png",
-		GL_MIRRORED_REPEAT,
-		GL_MIRRORED_REPEAT,
-		GL_LINEAR_MIPMAP_LINEAR,
-		GL_LINEAR);
-	glBindTextureUnit(1,texture1);
+
+
+
+
+
 
 
 
@@ -198,13 +269,15 @@ int main() {
 	GLvoid* s[] = { (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5)};
 
 	// no texturing
-	glUniform1i(glGetUniformLocation(program, "texturing"), 1);
+	glUniform1i(glGetUniformLocation(program, "texturing"), 0);
 
 	// set the camera up early
 	updateProjView(&proj, &view, width, height);
 
 
 
+	// assign these variables to the correct location for the shader
+	// so the material objects can update them accordinly
 	matAlbedo = glGetUniformLocation(program, "material.albedo");
 	matDiffuse = glGetUniformLocation(program, "material.diffuse");
 	matSpecular = glGetUniformLocation(program, "material.specular");
@@ -221,11 +294,11 @@ int main() {
 
 
 
-	Mesh batch(1, 1);
-	batch.appendData(&verts, &inds);
+	//Mesh batch(1, 1);
+	//batch.appendData(&verts, &inds);
 	//exit(1);
-	checkErrors();
-	exit(1);
+	//checkErrors();
+	//exit(1);
 
 	// this will combine objects of the same material
 
@@ -289,35 +362,65 @@ int main() {
 
 	// we have the number of indicies to draw here
 	std::vector<GLsizei> count__;
-	count__.push_back(inds.size());
+	count__.push_back(inds2.size() * 2);
+	count__.push_back(inds2.size() * 2);
 	count__.push_back(inds2.size() * 2);
 	count__.push_back(inds.size());
-	count__.push_back(inds2.size() * 2);
 	count__.push_back(inds.size());
-	count__.push_back(inds2.size() * 2);
+	count__.push_back(inds.size());
 
 
 	// start at 0 and then inds size bc those are the cutoffs for index buffers
 	std::vector<GLvoid*> start__;
-	start__.push_back(0);
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
 	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
 	start__.push_back(0);
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
 	start__.push_back(0);
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
+	start__.push_back(0);
 
 
 	
 	std::vector<glm::mat4> models_;
-	models_.push_back(glm::translate(trans, glm::vec3(-5, 0, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(5, 0, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(0, -5, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(0, 5, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(5, 5, 0)));
-	models_.push_back(glm::translate(trans, glm::vec3(5, -5, 0)));
+	//models_.push_back(glm::translate(trans, glm::vec3(-5, 0, 0)));
+	models_.push_back(
+		glm::translate(trans, {10,0,0}) *
+		glm::rotate(trans, glm::radians(0.0f), { 1,0,0 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 0,1,0 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 0,0,1 }) *
+		glm::scale(trans, {10.0f,.5f,.5f})
+	);
+	models_.push_back(
+		glm::translate(trans, { 0,10,0 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 1,0,0 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 0,1,0 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 0,0,1 }) *
+		glm::scale(trans, { .5f,10.0f,.5f })
+	);
+
+	models_.push_back(
+		glm::translate(trans, { 0,0,10 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 1,0,0 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 0,1,0 }) *
+		glm::rotate(trans, glm::radians(0.0f), { 0,0,1 }) *
+		glm::scale(trans, { .5f,.5f,10.0f })
+	);
+
+	models_.push_back(glm::translate(trans, 10.0f *glm::normalize(glm::vec3(2, 3, 5))));
+	
+	glm::vec3 pos2 = glm::normalize(glm::cross(glm::vec3(2,3,5), glm::vec3(0, 0, -1 )));
+	models_.push_back(glm::translate(trans, 10.0f* pos2));
+
+
+	//glm::vec3 pos3 = glm::normalize(glm::cross(glm::vec3(2, 3, 5), pos2));
+	//models_.push_back(glm::translate(trans, 10.0f*pos3));
+
+	//models_.push_back(glm::translate(trans, glm::vec3(5, 5, 0)));
+	//models_.push_back(glm::translate(trans, glm::vec3(5, -5, 0)));
 
 	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
 
+	float cntr = 0.0f;
 
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
@@ -331,12 +434,11 @@ int main() {
 		// clear the buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// this must be done each time
 		glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 
-		 //draw all components in the model
-		//m.draw();
 
 
 		glBindBuffer(GL_ARRAY_BUFFER, batchBuffer);
@@ -349,7 +451,15 @@ int main() {
 
 		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
+
+		// move the position of point1_
+		cntr += .01;
+		point1_.translate = glm::vec3({1.0f,0.0f,0.0f+5.0f * sinf(cntr)});
+		point1_.updateModelMatrix();
+
 		m1.bindAttributes();
+
+		
 
 		//GLvoid* a = (GLvoid*)(4);
 		//glDrawElements(GL_TRIANGLES, inds2.size(), GL_UNSIGNED_INT, a);
@@ -357,10 +467,10 @@ int main() {
 		//glDrawElements(GL_TRIANGLES ,  inds.size() + inds2.size(), GL_UNSIGNED_INT, 0);
 
 		//glMultiDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexStart, 2);
-		glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
+		//glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
 
 
-		//m.draw();
+		m.draw();
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);

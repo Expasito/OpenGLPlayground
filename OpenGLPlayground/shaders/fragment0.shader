@@ -48,6 +48,16 @@ vec3 calcLight() {
 
 void main() {
 
+	if (material.areTextures == 1) {
+		FragColor = texture(textures[int(material.albedo.x)], textCoord_);
+		//FragColor = texture(textures[0], textCoord_);
+
+		//FragColor = vec4(material.albedo.x/10.0, 1, 1, 1);
+	}
+	else {
+		FragColor = vec4(1, 0, 1, 1);
+	}
+
 	//if (material.areTextures == 1) {
 	//	vec3 result = vec3(0);
 	//	vec4 alb = texture(textures[int(material.albedo.x)], textCoords);
@@ -60,7 +70,7 @@ void main() {
 	//	FragColor = vec4(result,1);
 	//}
 
-	FragColor = vec4(calcLight(), 1);
+	//FragColor = vec4(calcLight(), 1);
 
 	//FragColor = vec4(abs(normal_.x), abs(normal_.y), abs(normal_.z), 1);
 	//FragColor = vec4(textCoord_.x, textCoord_.y, 1, 1);

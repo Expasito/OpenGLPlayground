@@ -5,6 +5,7 @@
 // these are reimported because C++ gets angry
 #include <chrono>
 #include <vector>
+#include <map>
 
 struct Vertex {
 	glm::vec3 pos;
@@ -70,3 +71,5 @@ extern uint32_t matDiffuse;
 extern uint32_t matSpecular;
 extern uint32_t matShininess;
 extern uint32_t matAreTextures;
+
+extern std::map<int, uint32_t> textureMap;

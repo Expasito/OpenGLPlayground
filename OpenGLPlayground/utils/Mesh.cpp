@@ -104,7 +104,7 @@ void Mesh::appendData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indi
 		unsigned int copy;
 		glGenBuffers(1, &copy);
 		glBindBuffer(GL_COPY_READ_BUFFER, copy);
-		glBufferData(GL_COPY_READ_BUFFER, sizeof(Vertex) * (verticesCurSize + 1), NULL, GL_DYNAMIC_DRAW);
+		glBufferData(GL_COPY_READ_BUFFER, sizeof(Vertex) * (verticesCurSize), NULL, GL_DYNAMIC_DRAW);
 		checkErrors();
 		std::cout << "No errors\n";
 		exit(1);
