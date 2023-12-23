@@ -4,9 +4,8 @@ out vec4 FragColor;
 
 uniform sampler2D textures[32];
 
-flat in int draw;
 
-uniform int texturing;
+
 
 in vec3 pos_;
 in vec3 normal_;
@@ -55,8 +54,11 @@ void main() {
 		//FragColor = vec4(material.albedo.x/10.0, 1, 1, 1);
 	}
 	else {
-		FragColor = vec4(1, 0, 1, 1);
+		FragColor = vec4(material.albedo,1);
 	}
+
+
+	FragColor = vec4(1, 1, 1, 1);
 
 	//if (material.areTextures == 1) {
 	//	vec3 result = vec3(0);

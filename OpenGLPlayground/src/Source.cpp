@@ -5,7 +5,9 @@ const int width = 800;
 const int height = 800;
 
 
-
+/*
+* Define a few cout operators to make debugging easier
+*/
 
 std::ostream& operator<<(std::ostream& os, const glm::vec3& vec)
 {
@@ -20,6 +22,11 @@ std::ostream& operator<<(std::ostream& os, const glm::vec2& vec)
 }
 
 
+/*
+* 
+* Simple Model struct which holds components and can print them
+* 
+*/
 
 struct Model {
 	std::vector<Component*> components;
@@ -54,6 +61,11 @@ int main() {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
+	// enable certain vertex attributes
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
 
 	float data[] = {
 		-1.0,-1.0,-1.0, -1.0,-1.0,-1.0, 0,0,
@@ -66,9 +78,9 @@ int main() {
 	};
 
 
-	std::vector<Vertex> verts;
-	std::vector<uint32_t> inds;
-	makeIBO(data, sizeof(data)/sizeof(float), &verts, &inds);
+	std::vector<Vertex> verts1;
+	std::vector<uint32_t> inds1;
+	makeIBO(data, sizeof(data)/sizeof(float), &verts1, &inds1);
 
 	std::vector<Vertex> verts2;
 	std::vector<uint32_t> inds2;
@@ -78,20 +90,14 @@ int main() {
 	Mesh mesh2;
 
 
+	// create our two meshes to use
 	mesh1.loadMeshData(&verts2, &inds2);
-	mesh2.loadMeshData(&verts, &inds);
+	mesh2.loadMeshData(&verts1, &inds1);
 
-	for (int i = 0; i < verts2.size(); i++) {
-		Vertex v = verts2[i];
-		std::cout << "(" << v.pos << ", " << v.normal << ", " << v.textCoord << ")\n";
-		//Vertex v = verts2.at(i);
-		//std::cout << v.pos.x << " " << v.pos.y << " " << v.pos.z << ", " << v.normal.x << " " << v.normal.y << " " << v.normal.z << ", " << v.textCoord.x << " " << v.textCoord.y << "\n";
-	}
 
-	for (int i = 0; i < inds2.size(); i++) {
-		std::cout << inds2.at(i) << "\n";
-	}
-
+	/*
+	* Load textures here
+	*/
 	for (int i = 0; i < 35; i++) {
 		unsigned int texture0 = loadTexture("textures/GrassBlock.png",
 			GL_MIRRORED_REPEAT,
@@ -100,7 +106,6 @@ int main() {
 			GL_LINEAR);
 	}
 
-	//glActiveTexture(GL_TEXTURE0);
 	unsigned int texture0 = loadTexture("textures/GrassBlock.png",
 		GL_MIRRORED_REPEAT,
 		GL_MIRRORED_REPEAT,
@@ -108,7 +113,6 @@ int main() {
 		GL_LINEAR);
 
 
-	//glActiveTexture(GL_TEXTURE0 + 3);
 	unsigned int texture1 = loadTexture("textures/OldRock.png",
 		GL_MIRRORED_REPEAT,
 		GL_MIRRORED_REPEAT,
@@ -139,73 +143,27 @@ int main() {
 	glm::vec3 y = glm::cross(x, glm::vec3(0,0,-1));
 	glm::vec3 z = glm::cross(x, y);
 
-	// create a bunch of components to add to a model
-	Component c1(&mesh1, &m1, x, { 0,0,0 }, { 10,.0125,.0125 });
-	Component c2(&mesh1, &m1, y, { 0,0,0 }, { .0125,10,.0125 });
-
-	Component c3(&mesh1, &m1, z, { 0,0,0 }, { .0125,.0125,10 });
-
-
-	
-	glm::vec3 dir = 10.0f * glm::vec3(1.0f,.0f,.0f);
-
-	Component p1(&mesh1, &m2, dir, { 0,0,0 }, { 1,1,1});
-
-	glm::vec3 x1 = (dir);
-	glm::vec3 y1 = (glm::cross(dir, glm::vec3(0, 0, -1)));
-	//glm::vec3 y = {2, -1, 0};
-	glm::vec3 z1 = (glm::cross(x1, y1));
-
-	glm::mat3 B = { {x1}, {y1}, {z1} };
-
-	std::cout << "B: " << glm::to_string(B) << "\n";
-
-	glm::mat3 BInv = glm::inverse(B);
+	// Create components for each axis
+	Component axisX(&mesh1, &m1, x, { 0,0,0 }, { 10,.0125,.0125 });
+	Component axisY(&mesh1, &m1, y, { 0,0,0 }, { .0125,10,.0125 });
+	Component axisZ(&mesh1, &m1, z, { 0,0,0 }, { .0125,.0125,10 });
 
 
-	Component p2(&mesh1, &m2, y1, { 0,0,0 }, { .1,.1,.1 });
-	Component p3(&mesh1, &m2, z1, { 0,0,0 }, { .1,.1,.1 });
-
-	glm::vec3 point1(1.0f, 1.0f, 1.0f);
-	glm::vec3 point2(-10, 10, 10);
-	glm::vec3 point3(10, -10, 10);
 
 
-	Component point1_(&mesh1, &m3, 5.0f * point1, { 0,0,0 }, { 1,1,1 });
-	Component point2_(&mesh1, &m3, point2, { 0,0,0 }, { .1,.1,.1 });
-	Component point3_(&mesh1, &m3, point3, { 0,0,0 }, { .1,.1,.1 });
-
-
-	glm::vec3 new1_ = BInv * point1;
-	glm::vec3 new2_ = BInv * point2;
-	glm::vec3 new3_ = BInv * point3;
-
-
-	//std::cout << "Vec: " << glm::to_string(new1_) << "\n";
-
-	Component p4(&mesh1, &m3, new1_, { 0,0,0 }, { .5,.5,.5 });
-	Component p5(&mesh1, &m3, new2_, { 0,0,0 }, { .5,.5,.5 });
-	Component p6(&mesh1, &m3, new3_, { 0,0,0 }, { .5,.5,.5 });
-
-	std::cout << "Point1: " << glm::to_string(BInv * point1) << "\n";
-	std::cout << "Point2: " << glm::to_string(BInv * point2) << "\n";
-	std::cout << "Point3: " << glm::to_string(BInv * point3) << "\n";
-
+	Component p1(&mesh1, &m2, {5,5,5}, { 0,0,0 }, { 1,1,1 });
 
 	// This is the model we are trying to build of the components
-	Model m;
-	m.add(&c1);
-	m.add(&c2);
-	m.add(&c3);
-	m.add(&p1);
+	Model axes;
+	axes.add(&axisX);
+	axes.add(&axisY);
+	axes.add(&axisZ);
 
-	m.add(&point1_);
+	Model model1;
+	model1.add(&p1);
 
 
-	// enable certain vertex attributes
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
+
 
 
 
@@ -218,62 +176,23 @@ int main() {
 
 
 
-
+	// get the location for the matrices so we can send the data to the GPU
 	unsigned int projLoc, viewLoc, modelLoc;
 	projLoc = glGetUniformLocation(program, "projection");
 	viewLoc = glGetUniformLocation(program, "view");
 	modelLoc = glGetUniformLocation(program, "model");
 
 
+	// Define timers for our program so we can measure performance
 	std::chrono::high_resolution_clock::time_point start;
 	std::chrono::high_resolution_clock::time_point end;
 
 
-
-
-
-
-
-
-
-
-
-
-
-	int texture_units;
-	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
-
-	std::cout << "Texture units: " << texture_units << "\n";
-
-	// record how many objects have been drawn
-	int objects = 0;
-
-	// record how many triangles have been drawn
-	int triangles = 0;
-
-	// record how many draw calls have been called
-	int drawCalls = 0;
-
+	// Yes we want to profile, and do it 10 frames after we start the program
 	initProfile(10,10000, true);
-
-
-	GLsizei counts[] = { inds.size(), inds.size(), inds.size() - 18};
-	GLvoid* starts[] = { (GLvoid*)0, (GLvoid*)0, (GLvoid*)(NULL + 18*sizeof(unsigned int))};
-
-
-	GLsizei counts2[] = { indices2Size, indices2Size, indices2Size };
-	GLvoid* starts2[] = { (GLvoid*)0 , (GLvoid*)0 , (GLvoid*)0 };
-
-
-	GLsizei c[] = { 3, 3, 3 };
-	GLvoid* s[] = { (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5) , (GLvoid*)(rand() % 5)};
-
-	// no texturing
-	glUniform1i(glGetUniformLocation(program, "texturing"), 0);
 
 	// set the camera up early
 	updateProjView(&proj, &view, width, height);
-
 
 
 	// assign these variables to the correct location for the shader
@@ -290,15 +209,15 @@ int main() {
 	std::cout << "Shininess: " << matShininess << "\n";
 	std::cout << "AreTextures: " << matAreTextures << "\n";
 
-	glUniform3fv(matAlbedo, 1, glm::value_ptr(glm::vec3(1, 0, 1)));
 
 
 
-	//Mesh batch(1, 1);
-	//batch.appendData(&verts, &inds);
-	//exit(1);
-	//checkErrors();
-	//exit(1);
+	/*
+	* 
+	* Testing begins here
+	* 
+	*/
+
 
 	// this will combine objects of the same material
 
@@ -307,129 +226,100 @@ int main() {
 	glGenBuffers(1, &batchBuffer);
 	glGenBuffers(1, &batchIBO);
 	glBindBuffer(GL_ARRAY_BUFFER, batchBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (verts.size() + verts2.size()), NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (verts1.size() + verts2.size()), NULL, GL_DYNAMIC_DRAW);
 
 	
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * verts.size(), &verts[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts.size(), sizeof(Vertex) * verts2.size(), &verts2[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * verts1.size(), &verts1[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts1.size(), sizeof(Vertex) * verts2.size(), &verts2[0]);
 
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (inds.size() + inds2.size()), NULL , GL_DYNAMIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (inds1.size() + inds2.size()), NULL , GL_DYNAMIC_DRAW);
 
 
 	std::vector<uint32_t> cpy(inds2);
 	// add the number of initial vertices to the index so we displace to the right locations
-	int dx = verts.size();
+	int dx = verts1.size();
 	for (int i = 0; i < cpy.size(); i++) {
 		cpy[i] += dx;
 	}
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * inds.size(), &inds[0]);
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds.size(),sizeof(uint32_t) * inds2.size(), &cpy[0]);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * inds1.size(), &inds1[0]);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds1.size(),sizeof(uint32_t) * inds2.size(), &cpy[0]);
 
 
 
 
 
-	uint32_t* cheese = new uint32_t[inds.size() + inds2.size()];
-	glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * (inds.size() + inds2.size()), cheese);
+	uint32_t* cheese = new uint32_t[inds1.size() + inds2.size()];
+	glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * (inds1.size() + inds2.size()), cheese);
 
-	Vertex* bacon = new Vertex[verts.size() + verts2.size()];
-	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * (verts.size() + verts2.size()), bacon);
+	Vertex* bacon = new Vertex[verts1.size() + verts2.size()];
+	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * (verts1.size() + verts2.size()), bacon);
 
-	for (int i = 0; i < inds.size() + inds2.size(); i++) {
+	for (int i = 0; i < inds1.size() + inds2.size(); i++) {
 		std::cout << cheese[i] << " ";
 	}
 	std::cout << "\n";
-	for (int i = 0; i < (verts.size() + verts2.size()); i++) {
+	for (int i = 0; i < (verts1.size() + verts2.size()); i++) {
 		Vertex v = bacon[i];
 		std::cout << i << " : " << "(" << v.pos << ", " << v.normal << ", " << v.textCoord << ")\n";
 	}
 
 
 
-	glm::mat4 model(1);
-	// no displacement
-	model = glm::translate(trans, { 0,0,0 });
+
+
+
+	// NEED TO FIGURE THIS OUT
+
+	// record how many indicies to draw. This should be the indices count for each mesh
+	std::vector<GLsizei> count__;
+	count__.push_back(inds2.size());
+	count__.push_back(inds2.size());
+	count__.push_back(inds2.size());
+
+	count__.push_back(inds1.size());
+	count__.push_back(inds1.size());
+	count__.push_back(inds1.size());
+
+
+	// Give where to start in the buffer
+	std::vector<GLvoid*> start__;
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds1.size()));
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds1.size()));
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds1.size()));
+	start__.push_back(0);
+	start__.push_back(0);
+	start__.push_back(0);
+
+
+	
+	
+	// This keeps track of all model matrices for Multidraw to use
+	std::vector<glm::mat4> models_;
+
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(5, 0, 0)));
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(-5, 0, 0)));
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 5, 0)));
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, -5, 0)));
+
+
+
 
 
 	// Make model matrices and send them over
 	unsigned int models;
 	models = glGetUniformLocation(program, "models");
-
-
-	// NEED TO FIGURE THIS OUT
-
-	// we have the number of indicies to draw here
-	std::vector<GLsizei> count__;
-	count__.push_back(inds2.size() * 2);
-	count__.push_back(inds2.size() * 2);
-	count__.push_back(inds2.size() * 2);
-	count__.push_back(inds.size());
-	count__.push_back(inds.size());
-	count__.push_back(inds.size());
-
-
-	// start at 0 and then inds size bc those are the cutoffs for index buffers
-	std::vector<GLvoid*> start__;
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds.size()));
-	start__.push_back(0);
-	start__.push_back(0);
-	start__.push_back(0);
-
-
-	
-	std::vector<glm::mat4> models_;
-	//models_.push_back(glm::translate(trans, glm::vec3(-5, 0, 0)));
-	models_.push_back(
-		glm::translate(trans, {10,0,0}) *
-		glm::rotate(trans, glm::radians(0.0f), { 1,0,0 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 0,1,0 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 0,0,1 }) *
-		glm::scale(trans, {10.0f,.5f,.5f})
-	);
-	models_.push_back(
-		glm::translate(trans, { 0,10,0 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 1,0,0 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 0,1,0 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 0,0,1 }) *
-		glm::scale(trans, { .5f,10.0f,.5f })
-	);
-
-	models_.push_back(
-		glm::translate(trans, { 0,0,10 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 1,0,0 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 0,1,0 }) *
-		glm::rotate(trans, glm::radians(0.0f), { 0,0,1 }) *
-		glm::scale(trans, { .5f,.5f,10.0f })
-	);
-
-	models_.push_back(glm::translate(trans, 10.0f *glm::normalize(glm::vec3(2, 3, 5))));
-	
-	glm::vec3 pos2 = glm::normalize(glm::cross(glm::vec3(2,3,5), glm::vec3(0, 0, -1 )));
-	models_.push_back(glm::translate(trans, 10.0f* pos2));
-
-
-	//glm::vec3 pos3 = glm::normalize(glm::cross(glm::vec3(2, 3, 5), pos2));
-	//models_.push_back(glm::translate(trans, 10.0f*pos3));
-
-	//models_.push_back(glm::translate(trans, glm::vec3(5, 5, 0)));
-	//models_.push_back(glm::translate(trans, glm::vec3(5, -5, 0)));
-
 	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
+
+	glm::mat4 model(1);
+
+
 
 	float cntr = 0.0f;
 
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
-
-		// reset counters
-		objects = 0;
-		drawCalls = 0;
-		triangles = 0;
-
 
 		// clear the buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -441,25 +331,17 @@ int main() {
 
 
 
-		glBindBuffer(GL_ARRAY_BUFFER, batchBuffer);
+
+		glBindBuffer(GL_ARRAY_BUFFER, mesh1.vbo);
 		// give position, normal and texture coordinate data
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 1));
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 2));
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh1.ibo);
 
 		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-
-		// move the position of point1_
-		cntr += .01;
-		point1_.translate = glm::vec3({1.0f,0.0f,0.0f+5.0f * sinf(cntr)});
-		point1_.updateModelMatrix();
-
-		m1.bindAttributes();
-
-		
 
 		//GLvoid* a = (GLvoid*)(4);
 		//glDrawElements(GL_TRIANGLES, inds2.size(), GL_UNSIGNED_INT, a);
@@ -467,10 +349,8 @@ int main() {
 		//glDrawElements(GL_TRIANGLES ,  inds.size() + inds2.size(), GL_UNSIGNED_INT, 0);
 
 		//glMultiDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexStart, 2);
-		//glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
+		glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
 
-
-		m.draw();
 
 
 		postRenderingSteps(false, window, &start, &proj, &view, width, height);
