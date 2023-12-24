@@ -32,3 +32,9 @@ void Material::drawAll() {
 		c->draw();
 	}
 }
+
+void Material::drawBatched() {
+	bindAttributes();
+
+	
+}

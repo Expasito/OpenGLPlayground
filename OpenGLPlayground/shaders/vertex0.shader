@@ -9,7 +9,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
-uniform mat4 models[6];
+uniform mat4 models[10];
 
 
 

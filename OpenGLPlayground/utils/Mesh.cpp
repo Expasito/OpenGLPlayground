@@ -65,6 +65,9 @@ void Mesh::loadMeshData(float* vertices, uint32_t verticesSize, uint32_t* indice
 
 void Mesh::loadMeshData(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) {
 
+	verts = vertices;
+	inds = indices;
+
 	// For each buffer, check if we need to resize or not
 	// then send the data to the GPU
 	// 

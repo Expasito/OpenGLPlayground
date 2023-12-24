@@ -58,7 +58,7 @@ void main() {
 	}
 
 
-	FragColor = vec4(1, 1, 1, 1);
+	//FragColor = vec4(1, 1, 1, 1);
 
 	//if (material.areTextures == 1) {
 	//	vec3 result = vec3(0);

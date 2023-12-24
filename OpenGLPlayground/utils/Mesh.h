@@ -18,6 +18,9 @@ public:
 	unsigned int vbo;
 	unsigned int ibo;
 
+	std::vector<Vertex>* verts;
+	std::vector<uint32_t>* inds;
+
 	// what is the max capacity of the buffer
 	uint32_t verticesMaxCapacity;
 	uint32_t indicesMaxCapacity;

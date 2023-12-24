@@ -77,6 +77,16 @@ int main() {
 		1.0,1.0,-1.0, 1.0,1.0,-1.0, 1.0,1.0
 	};
 
+	float data2[] = {
+		-1.0,-1.0,-1.0, -1.0,-1.0,-1.0, 0,0,
+		-1.0,1.0,-1.0, -1.0,1.0,-1.0, 0.0,1.0,
+		1.0,-1.0,-1.0, 1.0,-1.0,-1.0, 1.0,0.0,
+
+		-1.0,1.0,-1.0, -1.0,1.0,-1.0, 0.0,1.0,
+		1.0,-1.0,-1.0, 1.0,-1.0,-1.0, 1.0,0.0,
+		1.0,1.0,-1.0, 1.0,1.0,-1.0, 1.0,1.0
+	};
+
 
 	std::vector<Vertex> verts1;
 	std::vector<uint32_t> inds1;
@@ -86,13 +96,19 @@ int main() {
 	std::vector<uint32_t> inds2;
 	makeIBO(cubeVertices, cubeVertsSize / sizeof(float), &verts2, &inds2);
 
+	std::vector<Vertex> verts3;
+	std::vector<uint32_t> inds3;
+	makeIBO(data2, sizeof(data2)/sizeof(float), &verts3, &inds3);
+
 	Mesh mesh1;
 	Mesh mesh2;
+	Mesh mesh3;
 
 
 	// create our two meshes to use
 	mesh1.loadMeshData(&verts2, &inds2);
 	mesh2.loadMeshData(&verts1, &inds1);
+	mesh3.loadMeshData(&verts3, &inds3);
 
 
 	/*
@@ -219,51 +235,113 @@ int main() {
 	*/
 
 
-	// this will combine objects of the same material
+	// this will combine vbos into one vbo to require less data changes
 
-	uint32_t batchBuffer;
+	uint32_t batchVBO;
 	uint32_t batchIBO;
-	glGenBuffers(1, &batchBuffer);
+
+	std::vector<Mesh*> meshes;
+
+	meshes.push_back(&mesh1);
+	meshes.push_back(&mesh2);
+	meshes.push_back(&mesh1);
+
+	// how large should the buffer be. This is the sum of all vertices going in the buffer
+	GLsizeiptr totalSizeVBO = 0;
+	GLsizeiptr totalSizeIBO = 0;
+	for (int i = 0; i < meshes.size(); i++) {
+		Mesh* m = meshes.at(i);
+		totalSizeVBO += m->verts->size();
+		totalSizeIBO += m->inds->size();
+
+		std::cout << "Size: " << m->verts->size() << " " << m->inds->size() << "\n";
+	}
+
+	// Then multiply by the size which is the size of a vertex
+	totalSizeVBO *= sizeof(Vertex);
+	totalSizeIBO *= sizeof(uint32_t);
+
+	// create buffers
+	glGenBuffers(1, &batchVBO);
 	glGenBuffers(1, &batchIBO);
-	glBindBuffer(GL_ARRAY_BUFFER, batchBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (verts1.size() + verts2.size()), NULL, GL_DYNAMIC_DRAW);
 
-	
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * verts1.size(), &verts1[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts1.size(), sizeof(Vertex) * verts2.size(), &verts2[0]);
+	// bind and initalize the vbo
+	glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
+	glBufferData(GL_ARRAY_BUFFER, totalSizeVBO, NULL, GL_DYNAMIC_DRAW);
 
-
+	// bind and initalize the ibo
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (inds1.size() + inds2.size()), NULL , GL_DYNAMIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, totalSizeIBO, NULL , GL_DYNAMIC_DRAW);
 
 
-	std::vector<uint32_t> cpy(inds2);
-	// add the number of initial vertices to the index so we displace to the right locations
-	int dx = verts1.size();
-	for (int i = 0; i < cpy.size(); i++) {
-		cpy[i] += dx;
+	GLsizeiptr curDxVBO = 0;
+	GLsizeiptr curDxIBO = 0;
+
+	int dx = 0;
+	// Now for each vertex vector, put it in the buffer.
+	for (int i = 0; i < meshes.size(); i++) {
+		Mesh* m = meshes.at(i);
+
+		std::vector<Vertex> vert = *m->verts;
+
+		glBufferSubData(GL_ARRAY_BUFFER, curDxVBO, sizeof(Vertex) * m->verts->size(), &(vert)[0]);
+		curDxVBO += sizeof(Vertex) * m->verts->size();
+
+
+		std::vector<uint32_t> cpy(*m->inds);
+		for (int j = 0; j < m->inds->size(); j++) {
+			cpy[j] += dx;
+		}
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, curDxIBO, sizeof(uint32_t) * m->inds->size(), &cpy[0]);
+
+		curDxIBO += sizeof(uint32_t) * m->inds->size();
+		dx += m->inds->size();
+
+		std::cout << "CurDXVBO: " << curDxVBO << " " << curDxIBO << " " << dx << "\n";
+
 	}
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * inds1.size(), &inds1[0]);
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds1.size(),sizeof(uint32_t) * inds2.size(), &cpy[0]);
 
+	//exit(1);
 
+	Vertex test;
+	//uint32_t test2[500];
+	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex), &test);
+	//glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * 100, test2);
 
+	std::cout << test.pos << "\n";
 
+	//exit(1);
 
-	uint32_t* cheese = new uint32_t[inds1.size() + inds2.size()];
-	glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * (inds1.size() + inds2.size()), cheese);
-
-	Vertex* bacon = new Vertex[verts1.size() + verts2.size()];
-	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * (verts1.size() + verts2.size()), bacon);
-
-	for (int i = 0; i < inds1.size() + inds2.size(); i++) {
-		std::cout << cheese[i] << " ";
+	for (int i = 0; i < 100; i++) {
+		//std::cout << test2[i] << "\n";
 	}
-	std::cout << "\n";
-	for (int i = 0; i < (verts1.size() + verts2.size()); i++) {
-		Vertex v = bacon[i];
-		std::cout << i << " : " << "(" << v.pos << ", " << v.normal << ", " << v.textCoord << ")\n";
+
+	//exit(1);
+
+	for (int i = 0; i < 100; i++) {
+		//Vertex v = test[i];
+		//std::cout << v.pos.x << "\n";
+		//std::cout << v.pos << " " <<  v.normal << " " << v.textCoord << "\n";
 	}
+	
+
+	//exit(1);
+	//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * verts1.size(), &verts1[0]);
+	//glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts1.size(), sizeof(Vertex) * verts2.size(), &verts2[0]);
+
+
+
+
+	//std::vector<uint32_t> cpy(inds2);
+	//// add the number of initial vertices to the index so we displace to the right locations
+	//int dx = verts1.size();
+	//for (int i = 0; i < cpy.size(); i++) {
+	//	cpy[i] += dx;
+	//}
+	//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * inds1.size(), &inds1[0]);
+	//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds1.size(),sizeof(uint32_t) * inds2.size(), &cpy[0]);
+
+
 
 
 
@@ -282,6 +360,11 @@ int main() {
 	count__.push_back(inds1.size());
 	count__.push_back(inds1.size());
 
+	count__.push_back(inds1.size());
+	count__.push_back(inds1.size());
+
+
+
 
 	// Give where to start in the buffer
 	std::vector<GLvoid*> start__;
@@ -291,6 +374,15 @@ int main() {
 	start__.push_back(0);
 	start__.push_back(0);
 	start__.push_back(0);
+
+	//start__.push_back(0);
+	//start__.push_back(0);
+
+
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * (inds1.size() + inds2.size())));
+	start__.push_back((GLvoid*)(sizeof(uint32_t) * (inds1.size() + inds2.size())));
+
+
 
 
 	
@@ -302,6 +394,13 @@ int main() {
 	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(-5, 0, 0)));
 	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 5, 0)));
 	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, -5, 0)));
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 0, 5)));
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 0, -5)));
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(-10, 0, 0)));
+	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(10, 0, 0)));
+
+
+
 
 
 
@@ -329,26 +428,21 @@ int main() {
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 
+		//glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 
+		// bind the two buffers for drawing
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
+		glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, mesh1.vbo);
 		// give position, normal and texture coordinate data
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 1));
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 2));
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh1.ibo);
+		m3.bindAttributes();
 
-		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-
-		//GLvoid* a = (GLvoid*)(4);
-		//glDrawElements(GL_TRIANGLES, inds2.size(), GL_UNSIGNED_INT, a);
-
-		//glDrawElements(GL_TRIANGLES ,  inds.size() + inds2.size(), GL_UNSIGNED_INT, 0);
-
-		//glMultiDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexStart, 2);
+		// now draw the elements
 		glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
 
 
