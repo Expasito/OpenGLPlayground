@@ -78,13 +78,13 @@ int main() {
 	};
 
 	float data2[] = {
-		-1.0,-1.0,-1.0, -1.0,-1.0,-1.0, 0,0,
-		-1.0,1.0,-1.0, -1.0,1.0,-1.0, 0.0,1.0,
-		1.0,-1.0,-1.0, 1.0,-1.0,-1.0, 1.0,0.0,
+		-1.0,-1.0,1.0, -1.0,-1.0,-1.0, 0,0,
+		-1.0,1.0,1.0, -1.0,1.0,-1.0, 0.0,1.0,
+		1.0,-1.0,1.0, 1.0,-1.0,-1.0, 1.0,0.0,
 
-		-1.0,1.0,-1.0, -1.0,1.0,-1.0, 0.0,1.0,
-		1.0,-1.0,-1.0, 1.0,-1.0,-1.0, 1.0,0.0,
-		1.0,1.0,-1.0, 1.0,1.0,-1.0, 1.0,1.0
+		-1.0,1.0,1.0, -1.0,1.0,-1.0, 0.0,1.0,
+		1.0,-1.0,1.0, 1.0,-1.0,-1.0, 1.0,0.0,
+		1.0,1.0,1.0, 1.0,1.0,-1.0, 1.0,1.0
 	};
 
 
@@ -240,11 +240,15 @@ int main() {
 	uint32_t batchVBO;
 	uint32_t batchIBO;
 
+	// keep track of all meshes
 	std::vector<Mesh*> meshes;
+
+	// each mesh has a start index in the index buffer associated with it
+	std::map<Mesh*, uint32_t> indexMeshMap;
 
 	meshes.push_back(&mesh1);
 	meshes.push_back(&mesh2);
-	meshes.push_back(&mesh1);
+	meshes.push_back(&mesh3);
 
 	// how large should the buffer be. This is the sum of all vertices going in the buffer
 	GLsizeiptr totalSizeVBO = 0;
@@ -282,6 +286,9 @@ int main() {
 	for (int i = 0; i < meshes.size(); i++) {
 		Mesh* m = meshes.at(i);
 
+		// add the mesh and index locations to the map
+		indexMeshMap[m] = curDxIBO;
+
 		std::vector<Vertex> vert = *m->verts;
 
 		glBufferSubData(GL_ARRAY_BUFFER, curDxVBO, sizeof(Vertex) * m->verts->size(), &(vert)[0]);
@@ -289,13 +296,14 @@ int main() {
 
 
 		std::vector<uint32_t> cpy(*m->inds);
-		for (int j = 0; j < m->inds->size(); j++) {
+		// increase the index value by the number of vertices(dx) already infront of it
+		for (int j = 0; j < cpy.size(); j++) {
 			cpy[j] += dx;
 		}
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, curDxIBO, sizeof(uint32_t) * m->inds->size(), &cpy[0]);
 
 		curDxIBO += sizeof(uint32_t) * m->inds->size();
-		dx += m->inds->size();
+		dx += m->verts->size();
 
 		std::cout << "CurDXVBO: " << curDxVBO << " " << curDxIBO << " " << dx << "\n";
 
@@ -303,48 +311,35 @@ int main() {
 
 	//exit(1);
 
-	Vertex test;
+	const int elms = 16+4+4;
+	Vertex test[elms];
 	//uint32_t test2[500];
-	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex), &test);
+	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex)*elms, test);
 	//glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * 100, test2);
 
-	std::cout << test.pos << "\n";
-
-	//exit(1);
-
-	for (int i = 0; i < 100; i++) {
-		//std::cout << test2[i] << "\n";
+	for (int i = 0; i < elms; i++) {
+		Vertex v = test[i];
+		std::cout << i << ": " << v.pos << " " << v.normal << " " << v.textCoord << "\n";
 	}
 
-	//exit(1);
+	const int elms2 = 20;
+	uint32_t test2[elms2];
+	glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * elms2, test2);
 
-	for (int i = 0; i < 100; i++) {
-		//Vertex v = test[i];
-		//std::cout << v.pos.x << "\n";
-		//std::cout << v.pos << " " <<  v.normal << " " << v.textCoord << "\n";
+
+	for (int i = 0; i < elms2; i++) {
+		std::cout << i << ": " << test2[i] << "\n";
 	}
+
+
+	std::vector<GLsizei> count_;
+	count_.push_back(mesh1.inds->size());
 	
+	std::vector<GLvoid*> start_;
+	start_.push_back((GLvoid*)indexMeshMap[&mesh1]);
 
-	//exit(1);
-	//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * verts1.size(), &verts1[0]);
-	//glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex) * verts1.size(), sizeof(Vertex) * verts2.size(), &verts2[0]);
-
-
-
-
-	//std::vector<uint32_t> cpy(inds2);
-	//// add the number of initial vertices to the index so we displace to the right locations
-	//int dx = verts1.size();
-	//for (int i = 0; i < cpy.size(); i++) {
-	//	cpy[i] += dx;
-	//}
-	//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * inds1.size(), &inds1[0]);
-	//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * inds1.size(),sizeof(uint32_t) * inds2.size(), &cpy[0]);
-
-
-
-
-
+	std::vector<glm::mat4> models__;
+	models__.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 10, 0)));
 
 
 
@@ -360,8 +355,8 @@ int main() {
 	count__.push_back(inds1.size());
 	count__.push_back(inds1.size());
 
-	count__.push_back(inds1.size());
-	count__.push_back(inds1.size());
+	count__.push_back(inds3.size());
+	count__.push_back(inds3.size());
 
 
 
@@ -375,11 +370,7 @@ int main() {
 	start__.push_back(0);
 	start__.push_back(0);
 
-	//start__.push_back(0);
-	//start__.push_back(0);
-
-
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * (inds1.size() + inds2.size())));
+	start__.push_back((GLvoid*)(sizeof(uint32_t)* (inds1.size()+inds2.size())));
 	start__.push_back((GLvoid*)(sizeof(uint32_t) * (inds1.size() + inds2.size())));
 
 
@@ -409,9 +400,7 @@ int main() {
 	// Make model matrices and send them over
 	unsigned int models;
 	models = glGetUniformLocation(program, "models");
-	glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
-
-	glm::mat4 model(1);
+	//glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
 
 
 
@@ -428,9 +417,6 @@ int main() {
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 
-		//glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-
 		// bind the two buffers for drawing
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
 		glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
@@ -440,10 +426,16 @@ int main() {
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 1));
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 2));
 
+		// draw the first material
 		m3.bindAttributes();
-
-		// now draw the elements
+		glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
 		glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
+
+
+		// draw second material
+		m2.bindAttributes();
+		glUniformMatrix4fv(models, models__.size(), GL_FALSE, glm::value_ptr(models__[0]));
+		glMultiDrawElements(GL_TRIANGLES, &count_[0], GL_UNSIGNED_INT, &start_[0], count_.size());
 
 
 
