@@ -37,6 +37,7 @@ struct Model {
 
 	void draw() {
 		for (Component* c : components) {
+			
 			c->draw();
 		}
 	}
@@ -45,6 +46,62 @@ struct Model {
 struct Node {
 	Model* model;
 	
+};
+
+
+class BoundingBox {
+public:
+	std::vector<Component*> components;
+
+	// get the min and max of every direction
+	float minX = 1e9, maxX = -1e9;
+	float minY = 1e9, maxY = -1e9;
+	float minZ = 1e9, maxZ = -1e9;
+
+	void add(Component* c) {
+		components.push_back(c);
+		update();
+	}
+
+	void update() {
+		// reset values
+		minX = 1e9;
+		maxX = -1e9;
+		minY = 1e9;
+		maxY = -1e9;
+		minZ = 1e9;
+		maxZ = -1e9;
+
+
+		for (Component* c : components) {
+			Mesh* m = c->mesh;
+			std::vector<Vertex>* vs = m->verts;
+			for (int i = 0; i < vs->size(); i++) {
+				Vertex v = vs->at(i);
+				glm::vec4 vertex = c->model * glm::vec4(v.pos,1.0f);
+				if (vertex.x > maxX) {
+					maxX = vertex.x;
+				}
+				if (vertex.x < minX) {
+					minX = vertex.x;
+				}
+				if (vertex.y > maxY) {
+					maxY = vertex.y;
+				}
+				if (vertex.y < minY) {
+					minY = vertex.y;
+				}
+				if (vertex.z > maxZ) {
+					maxZ = vertex.z;
+				}
+				if (vertex.z < minZ) {
+					minZ = vertex.z;
+				}
+			}
+		}
+	}
+private:
+
 };
 
 
@@ -150,6 +207,7 @@ int main() {
 	Material m1({.5,.6,.7}, {.1,.5,.3}, {.5,.8,.3}, 100, 0);
 	Material m2({0, .1,.3}, {.5,.5,.2}, {.2,.4,.2}, 10, 1);
 	Material m3({ 3, .5,.5 }, { .5,.5,.2 }, { .2,.4,.2 }, 10, 1);
+	Material m4({1.0f,.7,.2}, {.1,.2,.3}, {.5,.6,.2}, 100, 0);
 
 
 
@@ -167,7 +225,7 @@ int main() {
 
 
 
-	Component p1(&mesh1, &m2, {5,5,5}, { 0,0,0 }, { 1,1,1 });
+	Component p1(&mesh1, &m1, {5,5,5}, { 45,0,60 }, { 2,1,1 });
 
 	// This is the model we are trying to build of the components
 	Model axes;
@@ -177,6 +235,38 @@ int main() {
 
 	Model model1;
 	model1.add(&p1);
+
+
+	BoundingBox bb;
+	bb.add(&p1);
+
+	std::cout << bb.maxX << " " << bb.minX << "\n";
+
+	Component a(&mesh1, &m4, glm::vec3(bb.minX, bb.minY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
+	Component b(&mesh1, &m4, glm::vec3(bb.minX, bb.maxY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
+	Component c(&mesh1, &m4, glm::vec3(bb.maxX, bb.maxY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
+	Component d(&mesh1, &m4, glm::vec3(bb.maxX, bb.minY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
+	Component e(&mesh1, &m4, glm::vec3(bb.minX, bb.minY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
+	Component f(&mesh1, &m4, glm::vec3(bb.minX, bb.maxY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
+	Component g(&mesh1, &m4, glm::vec3(bb.maxX, bb.maxY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
+	Component h(&mesh1, &m4, glm::vec3(bb.maxX, bb.minY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
+
+
+
+
+	model1.add(&a);
+	model1.add(&b);
+	model1.add(&c);
+	model1.add(&d);
+	model1.add(&e);
+	model1.add(&f);
+	model1.add(&g);
+	model1.add(&h);
+
+	model1.add(&p1);
+
+	
+	//exit(1);
 
 
 
@@ -392,6 +482,36 @@ int main() {
 
 
 
+	/*
+	* Here, we are putting each material's components information into vectors
+	* so they can be drawn using multidraw. For each component, use the indexMeshMap map to
+	* find the start index, get the number of indices to draw and get the model, and add to the 
+	* vector. Then we can draw each material easily
+	*/
+
+	std::vector<glm::mat4> m1Models;
+	std::vector<GLsizei> m1Counts;
+	std::vector<GLvoid*> m1Starts;
+
+	for (Component* c : m1.components) {
+		m1Starts.push_back((GLvoid*)indexMeshMap[c->mesh]);
+		m1Counts.push_back(c->mesh->inds->size());
+		m1Models.push_back(c->model);
+	}
+
+
+	std::vector<glm::mat4> m4Models;
+	std::vector<GLsizei> m4Counts;
+	std::vector<GLvoid*> m4Starts;
+
+	for (Component* c : m4.components) {
+		m4Starts.push_back((GLvoid*)indexMeshMap[c->mesh]);
+		m4Counts.push_back(c->mesh->inds->size());
+		m4Models.push_back(c->model);
+	}
+
+
+
 
 
 
@@ -429,13 +549,77 @@ int main() {
 		// draw the first material
 		m3.bindAttributes();
 		glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
-		glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
+		//glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
 
 
 		// draw second material
 		m2.bindAttributes();
 		glUniformMatrix4fv(models, models__.size(), GL_FALSE, glm::value_ptr(models__[0]));
-		glMultiDrawElements(GL_TRIANGLES, &count_[0], GL_UNSIGNED_INT, &start_[0], count_.size());
+		//glMultiDrawElements(GL_TRIANGLES, &count_[0], GL_UNSIGNED_INT, &start_[0], count_.size());
+
+
+		/*
+		* 
+		* Here we draw with the models defined above for each material and not manually adding
+		* 
+		*/
+
+		m1.bindAttributes();
+		glUniformMatrix4fv(models, m1Models.size(), GL_FALSE, glm::value_ptr(m1Models[0]));
+		glMultiDrawElements(GL_TRIANGLES, &m1Counts[0], GL_UNSIGNED_INT, &m1Starts[0], m1Counts.size());
+
+
+		m4.bindAttributes();
+		glUniformMatrix4fv(models, m4Models.size(), GL_FALSE, glm::value_ptr(m4Models[0]));
+		glMultiDrawElements(GL_TRIANGLES, &m4Counts[0], GL_UNSIGNED_INT, &m4Starts[0], m4Counts.size());
+
+
+		p1.rotate.z += .25;
+		p1.rotate.x -= .35;
+		p1.updateModelMatrix();
+
+		std::cout << p1.rotate << "\n";
+
+		bb.update();
+
+		std::cout << bb.minX << " " << bb.minY << " " << bb.minZ << "\n";
+
+
+
+
+		a.translate = glm::vec3(bb.minX, bb.minY, bb.minZ);
+		//a.translate.x += .1;
+		//a.rotate.z += 2;
+		
+		//std::cout << a.translate << "\n";
+		b.translate = glm::vec3(bb.minX, bb.maxY, bb.minZ);
+		c.translate = glm::vec3(bb.maxX, bb.maxY, bb.minZ);
+		d.translate = glm::vec3(bb.maxX, bb.minY, bb.minZ);
+		e.translate = glm::vec3(bb.minX, bb.minY, bb.maxZ);
+		f.translate = glm::vec3(bb.minX, bb.maxY, bb.maxZ);
+		g.translate = glm::vec3(bb.maxX, bb.maxY, bb.maxZ);
+		h.translate = glm::vec3(bb.maxX, bb.minY, bb.maxZ);
+		a.updateModelMatrix();
+		b.updateModelMatrix();
+		c.updateModelMatrix();
+		d.updateModelMatrix();
+		e.updateModelMatrix();
+		f.updateModelMatrix();
+		g.updateModelMatrix();
+		h.updateModelMatrix();
+
+		
+
+		m1Models.clear();
+		for (Component* c : m1.components) {
+			m1Models.push_back(c->model);
+		}
+
+		m4Models.clear();
+		for (Component* c : m4.components) {
+			m4Models.push_back(c->model);
+		}
+
 
 
 
