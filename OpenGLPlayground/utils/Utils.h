@@ -2,15 +2,25 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "../src/Includes.h"
+#include "../utils/Mesh.h"
 // these are reimported because C++ gets angry
 #include <chrono>
 #include <vector>
 #include <map>
 
+class Mesh;
+
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 normal;
 	glm::vec2 textCoord;
+};
+
+
+struct BatchedMesh {
+	uint32_t batchVBO;
+	uint32_t batchIBO;
+	std::map<Mesh*, uint32_t>* indexMeshMap;
 };
 
 
@@ -46,6 +56,8 @@ void genVerts2(int, int);
 
 void cleanup();
 
+BatchedMesh* genBatchedMesh(std::vector<Mesh*> meshes);
+
 unsigned int loadTexture(const char* path,
 	unsigned int wrapS,
 	unsigned int wrapT,
@@ -73,3 +85,4 @@ extern uint32_t matShininess;
 extern uint32_t matAreTextures;
 
 extern std::map<int, uint32_t> textureMap;
+

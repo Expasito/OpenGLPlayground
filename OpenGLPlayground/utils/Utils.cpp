@@ -22,6 +22,7 @@ struct UserInput {
 } userInput;
 
 
+
 glm::vec3* verts2;
 int verts2Size = 0;
 
@@ -34,6 +35,87 @@ uint32_t matDiffuse = -1;
 uint32_t matSpecular = -1;
 uint32_t matShininess = -1;
 uint32_t matAreTextures = -1;
+
+
+
+
+
+
+BatchedMesh* genBatchedMesh(std::vector<Mesh*> meshes) {
+	// this will combine vbos into one vbo to require less data changes
+
+	// create our buffers
+	uint32_t batchVBO;
+	uint32_t batchIBO;
+
+
+	// each mesh has a start index in the index buffer associated with it
+	std::map<Mesh*, uint32_t>* indexMeshMap = new std::map<Mesh*, uint32_t>();
+
+	// how large should the buffer be. This is the sum of all vertices going in the buffer
+	GLsizeiptr totalSizeVBO = 0;
+	GLsizeiptr totalSizeIBO = 0;
+	for (int i = 0; i < meshes.size(); i++) {
+		Mesh* m = meshes.at(i);
+		totalSizeVBO += m->verts->size();
+		totalSizeIBO += m->inds->size();
+	}
+
+	// Then multiply by the size which is the size of a vertex
+	totalSizeVBO *= sizeof(Vertex);
+	totalSizeIBO *= sizeof(uint32_t);
+
+	// create buffers
+	glGenBuffers(1, &batchVBO);
+	glGenBuffers(1, &batchIBO);
+
+	// bind and initalize the vbo
+	glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
+	glBufferData(GL_ARRAY_BUFFER, totalSizeVBO, NULL, GL_DYNAMIC_DRAW);
+
+	// bind and initalize the ibo
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, totalSizeIBO, NULL, GL_DYNAMIC_DRAW);
+
+
+	GLsizeiptr curDxVBO = 0;
+	GLsizeiptr curDxIBO = 0;
+
+	int dx = 0;
+	// Now for each vertex vector, put it in the buffer.
+	for (int i = 0; i < meshes.size(); i++) {
+		Mesh* m = meshes.at(i);
+
+		// add the mesh and index locations to the map
+		(*indexMeshMap)[m] = curDxIBO;
+
+		std::vector<Vertex> vert = *m->verts;
+
+		glBufferSubData(GL_ARRAY_BUFFER, curDxVBO, sizeof(Vertex) * m->verts->size(), &(vert)[0]);
+		curDxVBO += sizeof(Vertex) * m->verts->size();
+
+
+		std::vector<uint32_t> cpy(*m->inds);
+		// increase the index value by the number of vertices(dx) already infront of it
+		for (int j = 0; j < cpy.size(); j++) {
+			cpy[j] += dx;
+		}
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, curDxIBO, sizeof(uint32_t) * m->inds->size(), &cpy[0]);
+
+		curDxIBO += sizeof(uint32_t) * m->inds->size();
+		dx += m->verts->size();
+
+		std::cout << "CurDXVBO: " << curDxVBO << " " << curDxIBO << " " << dx << "\n";
+
+	}
+
+	BatchedMesh* b = new BatchedMesh();
+	b->batchIBO = batchIBO;
+	b->batchVBO = batchVBO;
+	b->indexMeshMap = indexMeshMap;
+
+	return b;
+}
 
 
 // make the texture map public for all files

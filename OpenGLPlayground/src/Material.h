@@ -1,8 +1,10 @@
 #pragma once
 #include "Includes.h"
 #include "Component.h"
+#include "../utils/Mesh.h"
 
 class Component;
+class Mesh;
 class Material
 {
 public:
@@ -15,6 +17,12 @@ public:
 
 	std::vector<Component*> components;
 
+	std::vector<glm::mat4> models;
+	std::vector<GLsizei> counts;
+	std::vector<GLvoid*> starts;
+
+	std::map<Mesh*, uint32_t>* indexMeshMap;
+
 	Material(glm::vec3 albedo, glm::vec3 diffuse, glm::vec3 specular, float shininess, float areTextures);
 
 	void bindAttributes();
@@ -24,5 +32,7 @@ public:
 	void drawAll();
 
 	void drawBatched();
+
+	void setMeshMap(std::map<Mesh*, uint32_t>* meshMap);
 };
 

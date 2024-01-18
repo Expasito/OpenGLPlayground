@@ -226,6 +226,9 @@ int main() {
 
 
 	Component p1(&mesh1, &m1, {5,5,5}, { 45,0,60 }, { 2,1,1 });
+	Component p2(&mesh2, &m2, { 4,4,4 }, { 0,0,34 }, { 1,2,4 });
+	Component p3(&mesh3, &m2, { -4,4,4 }, { -54,0,34 }, { 9,2,4 });
+
 
 	// This is the model we are trying to build of the components
 	Model axes;
@@ -239,8 +242,9 @@ int main() {
 
 	BoundingBox bb;
 	bb.add(&p1);
+	bb.add(&p2);
+	bb.add(&p3);
 
-	std::cout << bb.maxX << " " << bb.minX << "\n";
 
 	Component a(&mesh1, &m4, glm::vec3(bb.minX, bb.minY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
 	Component b(&mesh1, &m4, glm::vec3(bb.minX, bb.maxY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
@@ -325,160 +329,21 @@ int main() {
 	*/
 
 
-	// this will combine vbos into one vbo to require less data changes
-
-	uint32_t batchVBO;
-	uint32_t batchIBO;
-
-	// keep track of all meshes
-	std::vector<Mesh*> meshes;
-
-	// each mesh has a start index in the index buffer associated with it
-	std::map<Mesh*, uint32_t> indexMeshMap;
-
-	meshes.push_back(&mesh1);
-	meshes.push_back(&mesh2);
-	meshes.push_back(&mesh3);
-
-	// how large should the buffer be. This is the sum of all vertices going in the buffer
-	GLsizeiptr totalSizeVBO = 0;
-	GLsizeiptr totalSizeIBO = 0;
-	for (int i = 0; i < meshes.size(); i++) {
-		Mesh* m = meshes.at(i);
-		totalSizeVBO += m->verts->size();
-		totalSizeIBO += m->inds->size();
-
-		std::cout << "Size: " << m->verts->size() << " " << m->inds->size() << "\n";
-	}
-
-	// Then multiply by the size which is the size of a vertex
-	totalSizeVBO *= sizeof(Vertex);
-	totalSizeIBO *= sizeof(uint32_t);
-
-	// create buffers
-	glGenBuffers(1, &batchVBO);
-	glGenBuffers(1, &batchIBO);
-
-	// bind and initalize the vbo
-	glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
-	glBufferData(GL_ARRAY_BUFFER, totalSizeVBO, NULL, GL_DYNAMIC_DRAW);
-
-	// bind and initalize the ibo
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, totalSizeIBO, NULL , GL_DYNAMIC_DRAW);
-
-
-	GLsizeiptr curDxVBO = 0;
-	GLsizeiptr curDxIBO = 0;
-
-	int dx = 0;
-	// Now for each vertex vector, put it in the buffer.
-	for (int i = 0; i < meshes.size(); i++) {
-		Mesh* m = meshes.at(i);
-
-		// add the mesh and index locations to the map
-		indexMeshMap[m] = curDxIBO;
-
-		std::vector<Vertex> vert = *m->verts;
-
-		glBufferSubData(GL_ARRAY_BUFFER, curDxVBO, sizeof(Vertex) * m->verts->size(), &(vert)[0]);
-		curDxVBO += sizeof(Vertex) * m->verts->size();
-
-
-		std::vector<uint32_t> cpy(*m->inds);
-		// increase the index value by the number of vertices(dx) already infront of it
-		for (int j = 0; j < cpy.size(); j++) {
-			cpy[j] += dx;
-		}
-		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, curDxIBO, sizeof(uint32_t) * m->inds->size(), &cpy[0]);
-
-		curDxIBO += sizeof(uint32_t) * m->inds->size();
-		dx += m->verts->size();
-
-		std::cout << "CurDXVBO: " << curDxVBO << " " << curDxIBO << " " << dx << "\n";
-
-	}
-
-	//exit(1);
-
-	const int elms = 16+4+4;
-	Vertex test[elms];
-	//uint32_t test2[500];
-	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex)*elms, test);
-	//glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * 100, test2);
-
-	for (int i = 0; i < elms; i++) {
-		Vertex v = test[i];
-		std::cout << i << ": " << v.pos << " " << v.normal << " " << v.textCoord << "\n";
-	}
-
-	const int elms2 = 20;
-	uint32_t test2[elms2];
-	glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * elms2, test2);
-
-
-	for (int i = 0; i < elms2; i++) {
-		std::cout << i << ": " << test2[i] << "\n";
-	}
+	BatchedMesh* bm = genBatchedMesh({&mesh1, &mesh2, &mesh3});
 
 
 	std::vector<GLsizei> count_;
 	count_.push_back(mesh1.inds->size());
 	
 	std::vector<GLvoid*> start_;
-	start_.push_back((GLvoid*)indexMeshMap[&mesh1]);
+	start_.push_back((GLvoid*)(*(bm->indexMeshMap))[&mesh1]);
 
 	std::vector<glm::mat4> models__;
 	models__.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 10, 0)));
 
 
 
-	// NEED TO FIGURE THIS OUT
 
-	// record how many indicies to draw. This should be the indices count for each mesh
-	std::vector<GLsizei> count__;
-	count__.push_back(inds2.size());
-	count__.push_back(inds2.size());
-	count__.push_back(inds2.size());
-
-	count__.push_back(inds1.size());
-	count__.push_back(inds1.size());
-	count__.push_back(inds1.size());
-
-	count__.push_back(inds3.size());
-	count__.push_back(inds3.size());
-
-
-
-
-	// Give where to start in the buffer
-	std::vector<GLvoid*> start__;
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds1.size()));
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds1.size()));
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * inds1.size()));
-	start__.push_back(0);
-	start__.push_back(0);
-	start__.push_back(0);
-
-	start__.push_back((GLvoid*)(sizeof(uint32_t)* (inds1.size()+inds2.size())));
-	start__.push_back((GLvoid*)(sizeof(uint32_t) * (inds1.size() + inds2.size())));
-
-
-
-
-	
-	
-	// This keeps track of all model matrices for Multidraw to use
-	std::vector<glm::mat4> models_;
-
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(5, 0, 0)));
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(-5, 0, 0)));
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 5, 0)));
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, -5, 0)));
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 0, 5)));
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 0, -5)));
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(-10, 0, 0)));
-	models_.push_back(glm::translate(glm::mat4(1), glm::vec3(10, 0, 0)));
 
 
 
@@ -489,25 +354,32 @@ int main() {
 	* vector. Then we can draw each material easily
 	*/
 
-	std::vector<glm::mat4> m1Models;
-	std::vector<GLsizei> m1Counts;
-	std::vector<GLvoid*> m1Starts;
 
 	for (Component* c : m1.components) {
-		m1Starts.push_back((GLvoid*)indexMeshMap[c->mesh]);
-		m1Counts.push_back(c->mesh->inds->size());
-		m1Models.push_back(c->model);
+		m1.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
+		m1.counts.push_back(c->mesh->inds->size());
+		m1.models.push_back(c->model);
 	}
 
+	for (Component* c : m2.components) {
+		m2.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
 
-	std::vector<glm::mat4> m4Models;
-	std::vector<GLsizei> m4Counts;
-	std::vector<GLvoid*> m4Starts;
+		m2.counts.push_back(c->mesh->inds->size());
+		m2.models.push_back(c->model);
+	}
+
+	for (Component* c : m3.components) {
+		m3.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
+
+		m3.counts.push_back(c->mesh->inds->size());
+		m3.models.push_back(c->model);
+	}
 
 	for (Component* c : m4.components) {
-		m4Starts.push_back((GLvoid*)indexMeshMap[c->mesh]);
-		m4Counts.push_back(c->mesh->inds->size());
-		m4Models.push_back(c->model);
+		m4.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
+
+		m4.counts.push_back(c->mesh->inds->size());
+		m4.models.push_back(c->model);
 	}
 
 
@@ -538,24 +410,13 @@ int main() {
 
 
 		// bind the two buffers for drawing
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchIBO);
-		glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bm->batchIBO);
+		glBindBuffer(GL_ARRAY_BUFFER, bm->batchVBO);
 
 		// give position, normal and texture coordinate data
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 1));
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 2));
-
-		// draw the first material
-		m3.bindAttributes();
-		glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
-		//glMultiDrawElements(GL_TRIANGLES, &count__[0], GL_UNSIGNED_INT, &start__[0], count__.size());
-
-
-		// draw second material
-		m2.bindAttributes();
-		glUniformMatrix4fv(models, models__.size(), GL_FALSE, glm::value_ptr(models__[0]));
-		//glMultiDrawElements(GL_TRIANGLES, &count_[0], GL_UNSIGNED_INT, &start_[0], count_.size());
 
 
 		/*
@@ -565,13 +426,17 @@ int main() {
 		*/
 
 		m1.bindAttributes();
-		glUniformMatrix4fv(models, m1Models.size(), GL_FALSE, glm::value_ptr(m1Models[0]));
-		glMultiDrawElements(GL_TRIANGLES, &m1Counts[0], GL_UNSIGNED_INT, &m1Starts[0], m1Counts.size());
+		glUniformMatrix4fv(models, m1.models.size(), GL_FALSE, glm::value_ptr(m1.models[0]));
+		glMultiDrawElements(GL_TRIANGLES, &m1.counts[0], GL_UNSIGNED_INT, &m1.starts[0], m1.counts.size());
+
+		m2.bindAttributes();
+		glUniformMatrix4fv(models, m2.models.size(), GL_FALSE, glm::value_ptr(m2.models[0]));
+		glMultiDrawElements(GL_TRIANGLES, &m2.counts[0], GL_UNSIGNED_INT, &m2.starts[0], m2.counts.size());
 
 
 		m4.bindAttributes();
-		glUniformMatrix4fv(models, m4Models.size(), GL_FALSE, glm::value_ptr(m4Models[0]));
-		glMultiDrawElements(GL_TRIANGLES, &m4Counts[0], GL_UNSIGNED_INT, &m4Starts[0], m4Counts.size());
+		glUniformMatrix4fv(models, m4.models.size(), GL_FALSE, glm::value_ptr(m4.models[0]));
+		glMultiDrawElements(GL_TRIANGLES, &m4.counts[0], GL_UNSIGNED_INT, &m4.starts[0], m4.counts.size());
 
 
 		p1.rotate.z += .25;
@@ -610,14 +475,14 @@ int main() {
 
 		
 
-		m1Models.clear();
+		m1.models.clear();
 		for (Component* c : m1.components) {
-			m1Models.push_back(c->model);
+			m1.models.push_back(c->model);
 		}
 
-		m4Models.clear();
+		m4.models.clear();
 		for (Component* c : m4.components) {
-			m4Models.push_back(c->model);
+			m4.models.push_back(c->model);
 		}
 
 

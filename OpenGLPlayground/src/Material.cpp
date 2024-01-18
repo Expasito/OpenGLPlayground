@@ -24,6 +24,14 @@ void Material::bindAttributes() {
 
 void Material::add(Component* c) {
 	components.push_back(c);
+	//counts.push_back(c->mesh->inds->size());
+	//models.push_back(c->model);
+
+	// get the index based on the meshmap provided
+	// But not for now
+	//starts.push_back(
+	//	(GLvoid *) ((*indexMeshMap)[c->mesh])
+	//);
 }
 
 void Material::drawAll() {
@@ -37,4 +45,8 @@ void Material::drawBatched() {
 	bindAttributes();
 
 	
+}
+
+void Material::setMeshMap(std::map<Mesh*, uint32_t>* meshMap) {
+	indexMeshMap = meshMap;
 }
