@@ -37,6 +37,15 @@ uint32_t matShininess = -1;
 uint32_t matAreTextures = -1;
 
 
+// keep a list of materials
+// materials are automatically added when they are initalized
+std::vector<Material*> materials;
+
+// keep list of components
+// components are also automatially added when initalized
+std::vector<Component*> components;
+
+
 
 
 

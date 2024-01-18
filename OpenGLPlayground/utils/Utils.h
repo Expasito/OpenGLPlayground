@@ -9,6 +9,8 @@
 #include <map>
 
 class Mesh;
+class Material;
+class Component;
 
 struct Vertex {
 	glm::vec3 pos;
@@ -86,3 +88,5 @@ extern uint32_t matAreTextures;
 
 extern std::map<int, uint32_t> textureMap;
 
+extern std::vector<Material*> materials;
+extern std::vector<Component*> components;

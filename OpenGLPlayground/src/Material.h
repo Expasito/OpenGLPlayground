@@ -21,8 +21,6 @@ public:
 	std::vector<GLsizei> counts;
 	std::vector<GLvoid*> starts;
 
-	std::map<Mesh*, uint32_t>* indexMeshMap;
-
 	Material(glm::vec3 albedo, glm::vec3 diffuse, glm::vec3 specular, float shininess, float areTextures);
 
 	void bindAttributes();
@@ -33,6 +31,5 @@ public:
 
 	void drawBatched();
 
-	void setMeshMap(std::map<Mesh*, uint32_t>* meshMap);
 };
 

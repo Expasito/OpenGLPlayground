@@ -106,6 +106,9 @@ private:
 
 
 
+
+
+
 int main() {
 	initRenderer(width, height);
 	
@@ -208,6 +211,12 @@ int main() {
 	Material m2({0, .1,.3}, {.5,.5,.2}, {.2,.4,.2}, 10, 1);
 	Material m3({ 3, .5,.5 }, { .5,.5,.2 }, { .2,.4,.2 }, 10, 1);
 	Material m4({1.0f,.7,.2}, {.1,.2,.3}, {.5,.6,.2}, 100, 0);
+
+	//materials.push_back(&m1);
+	//materials.push_back(&m2);
+	//materials.push_back(&m3);
+	//materials.push_back(&m4);
+
 
 
 
@@ -398,6 +407,9 @@ int main() {
 
 	float cntr = 0.0f;
 
+
+	// Render previous frame first so the gpu can draw while we do the physics calculations and stuff
+
 	while (!glfwWindowShouldClose(window)) {
 		start = std::chrono::high_resolution_clock::now();
 
@@ -407,7 +419,6 @@ int main() {
 		// this must be done each time
 		glUniformMatrix4fv(projLoc, 1, false, glm::value_ptr(proj));
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
-
 
 		// bind the two buffers for drawing
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bm->batchIBO);
@@ -421,42 +432,48 @@ int main() {
 
 		/*
 		* 
-		* Here we draw with the models defined above for each material and not manually adding
+		* Here we draw with the models defined above for each material and not manually adding start/count values
 		* 
 		*/
 
-		m1.bindAttributes();
-		glUniformMatrix4fv(models, m1.models.size(), GL_FALSE, glm::value_ptr(m1.models[0]));
-		glMultiDrawElements(GL_TRIANGLES, &m1.counts[0], GL_UNSIGNED_INT, &m1.starts[0], m1.counts.size());
+		// for every material, draw everything 
+		for (Material* m : materials) {
+			// skip if empty
+			if (m->components.size() == 0) {
+				continue;
+			}
 
-		m2.bindAttributes();
-		glUniformMatrix4fv(models, m2.models.size(), GL_FALSE, glm::value_ptr(m2.models[0]));
-		glMultiDrawElements(GL_TRIANGLES, &m2.counts[0], GL_UNSIGNED_INT, &m2.starts[0], m2.counts.size());
+			m->bindAttributes();
+			glUniformMatrix4fv(models, m->models.size(), GL_FALSE, glm::value_ptr(m->models[0]));
+			glMultiDrawElements(GL_TRIANGLES, &(m->counts)[0], GL_UNSIGNED_INT, &(m->starts)[0], m->counts.size());
 
+		}
 
-		m4.bindAttributes();
-		glUniformMatrix4fv(models, m4.models.size(), GL_FALSE, glm::value_ptr(m4.models[0]));
-		glMultiDrawElements(GL_TRIANGLES, &m4.counts[0], GL_UNSIGNED_INT, &m4.starts[0], m4.counts.size());
+		/*
+		* 
+		* Physics happens here
+		* 
+		*/
 
+		// Now do physics and stuff
 
 		p1.rotate.z += .25;
 		p1.rotate.x -= .35;
 		p1.updateModelMatrix();
 
-		std::cout << p1.rotate << "\n";
+		p2.rotate.x += .3;
+		p2.updateModelMatrix();
+
+		//std::cout << p1.rotate << "\n";
 
 		bb.update();
 
-		std::cout << bb.minX << " " << bb.minY << " " << bb.minZ << "\n";
+		//std::cout << bb.minX << " " << bb.minY << " " << bb.minZ << "\n";
 
 
 
-
+		// update bounding box cube translate values
 		a.translate = glm::vec3(bb.minX, bb.minY, bb.minZ);
-		//a.translate.x += .1;
-		//a.rotate.z += 2;
-		
-		//std::cout << a.translate << "\n";
 		b.translate = glm::vec3(bb.minX, bb.maxY, bb.minZ);
 		c.translate = glm::vec3(bb.maxX, bb.maxY, bb.minZ);
 		d.translate = glm::vec3(bb.maxX, bb.minY, bb.minZ);
@@ -464,6 +481,8 @@ int main() {
 		f.translate = glm::vec3(bb.minX, bb.maxY, bb.maxZ);
 		g.translate = glm::vec3(bb.maxX, bb.maxY, bb.maxZ);
 		h.translate = glm::vec3(bb.maxX, bb.minY, bb.maxZ);
+
+		// now update the model matricies
 		a.updateModelMatrix();
 		b.updateModelMatrix();
 		c.updateModelMatrix();
@@ -474,17 +493,19 @@ int main() {
 		h.updateModelMatrix();
 
 		
+		/*
+		* 
+		* Update each material's models assuming they have been updated
+		* 
+		*/
 
-		m1.models.clear();
-		for (Component* c : m1.components) {
-			m1.models.push_back(c->model);
+		for (Material* m : materials) {
+			m->models.clear();
+			for (Component* c : m->components) {
+				m->models.push_back(c->model);
+			}
+
 		}
-
-		m4.models.clear();
-		for (Component* c : m4.components) {
-			m4.models.push_back(c->model);
-		}
-
 
 
 

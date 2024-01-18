@@ -6,6 +6,8 @@ Material::Material(glm::vec3 albedo, glm::vec3 diffuse, glm::vec3 specular, floa
 	this->specular = specular;
 	this->shininess = shininess;
 	this->areTextures = areTextures;
+
+	materials.push_back(this);
 };
 
 void Material::bindAttributes() {
@@ -45,8 +47,4 @@ void Material::drawBatched() {
 	bindAttributes();
 
 	
-}
-
-void Material::setMeshMap(std::map<Mesh*, uint32_t>* meshMap) {
-	indexMeshMap = meshMap;
 }
