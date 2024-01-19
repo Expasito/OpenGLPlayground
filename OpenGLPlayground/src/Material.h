@@ -15,6 +15,8 @@ public:
 	// 1 means that we use texture index from an array, 0 means we just use the actual values
 	int areTextures;
 
+	bool updateModelFlag = false;
+
 	std::vector<Component*> components;
 
 	std::vector<glm::mat4> models;

@@ -11,6 +11,9 @@ Component::Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::v
 	// add this model to the material so it knows to draw this too
 	material->add(this);
 	components.push_back(this);
+
+	// init the memory for the component
+	this->memory = new ComponentMemory;
 };
 
 void Component::updateModelMatrix() {
@@ -20,6 +23,9 @@ void Component::updateModelMatrix() {
 		glm::rotate(trans, glm::radians(rotate.y), { 0,1,0 }) *
 		glm::rotate(trans, glm::radians(rotate.z), { 0,0,1 }) *
 		glm::scale(trans, scalate);
+
+	// set the flag to true so the material knows to update
+	material->updateModelFlag = true;
 
 };
 

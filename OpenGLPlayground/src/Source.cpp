@@ -105,11 +105,38 @@ private:
 };
 
 
+/*
+* 
+* For a component to have an action script, it needs an init function, memory and a loop function
+* ComponentMemory is the memory and holds a pointer for an array for a data type
+* This struct design is the same for all components.
+* The functions used for init and loop are different though
+* 
+*/
 
+
+// 1 means a unique function, not a generic for all components
+void ComponentInit1(Component* comp) {
+	std::cout << "In the init function\n";
+	comp->memory->floats = new float[10];
+	comp->memory->numFloats = 10;
+	comp->memory->floats[0] = 0.0f;
+
+}
+
+void ComponentLoop1(Component* comp) {
+	std::cout << "Value: " << comp->memory->floats[0] << "\n";
+	comp->rotate.x += .1;
+	comp->translate.x = 5*sin(comp->memory->floats[0]);
+	comp->memory->floats[0] += .01;
+
+}
 
 
 
 int main() {
+
+
 	initRenderer(width, height);
 	
 	glUseProgram(program);
@@ -212,10 +239,6 @@ int main() {
 	Material m3({ 3, .5,.5 }, { .5,.5,.2 }, { .2,.4,.2 }, 10, 1);
 	Material m4({1.0f,.7,.2}, {.1,.2,.3}, {.5,.6,.2}, 100, 0);
 
-	//materials.push_back(&m1);
-	//materials.push_back(&m2);
-	//materials.push_back(&m3);
-	//materials.push_back(&m4);
 
 
 
@@ -278,6 +301,10 @@ int main() {
 
 	model1.add(&p1);
 
+
+	// set script functions
+	p1.init = ComponentInit1;
+	p1.loop = ComponentLoop1;
 	
 	//exit(1);
 
@@ -407,6 +434,13 @@ int main() {
 
 	float cntr = 0.0f;
 
+	// Run the init script for every component if its defined
+	for (Component* c : components) {
+		if (c->init != NULL) {
+			c->init(c);
+		}
+	}
+
 
 	// Render previous frame first so the gpu can draw while we do the physics calculations and stuff
 
@@ -455,6 +489,12 @@ int main() {
 		* 
 		*/
 
+		for (Component* c : components) {
+			if (c->loop != NULL) {
+				c->loop(c);
+			}
+		}
+
 		// Now do physics and stuff
 
 		p1.rotate.z += .25;
@@ -500,6 +540,10 @@ int main() {
 		*/
 
 		for (Material* m : materials) {
+			// if no one has updated the model matrix, then skip
+			if (m->updateModelFlag == false) {
+				continue;
+			}
 			m->models.clear();
 			for (Component* c : m->components) {
 				m->models.push_back(c->model);

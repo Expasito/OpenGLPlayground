@@ -22,6 +22,21 @@ public:
 
 	void draw();
 
+
+	struct ComponentMemory {
+		float* floats;
+		int numFloats;
+		int* ints;
+		int numInts;
+	};
+
+	// members for init, loop and memory
+	ComponentMemory* memory;
+
+	// These are function pointers to the init and loop functions
+	void (*init)(Component*);
+	void (*loop)(Component*);
+
 private:
 
 };
