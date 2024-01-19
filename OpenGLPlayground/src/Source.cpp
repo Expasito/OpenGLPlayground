@@ -117,7 +117,6 @@ private:
 
 // 1 means a unique function, not a generic for all components
 void ComponentInit1(Component* comp) {
-	std::cout << "In the init function\n";
 	comp->memory->floats = new float[10];
 	comp->memory->numFloats = 10;
 	comp->memory->floats[0] = 0.0f;
@@ -125,14 +124,26 @@ void ComponentInit1(Component* comp) {
 }
 
 void ComponentLoop1(Component* comp) {
-	std::cout << "Value: " << comp->memory->floats[0] << "\n";
 	comp->rotate.x += .1;
 	comp->translate.x = 5*sin(comp->memory->floats[0]);
 	comp->memory->floats[0] += .01;
 
 }
 
+void ComponentInit2(Component* comp) {
+	// we don't need any memory for this function
+}
 
+void ComponentLoop2(Component* comp) {
+	comp->translate.y -= .025;
+	if (comp->translate.y < 0.0f) {
+		comp->translate.x = rand() % 20 - 10;
+		comp->translate.z = rand() % 20 - 10;
+		comp->translate.y = 20;
+	}
+
+
+}
 
 int main() {
 
@@ -260,6 +271,8 @@ int main() {
 	Component p1(&mesh1, &m1, {5,5,5}, { 45,0,60 }, { 2,1,1 });
 	Component p2(&mesh2, &m2, { 4,4,4 }, { 0,0,34 }, { 1,2,4 });
 	Component p3(&mesh3, &m2, { -4,4,4 }, { -54,0,34 }, { 9,2,4 });
+	Component p4(&mesh1, &m3, { 0,10,0 }, { 0,0,0 }, { 1,1,1 });
+
 
 
 	// This is the model we are trying to build of the components
@@ -305,6 +318,9 @@ int main() {
 	// set script functions
 	p1.init = ComponentInit1;
 	p1.loop = ComponentLoop1;
+
+	p4.init = ComponentInit2;
+	p4.loop = ComponentLoop2;
 	
 	//exit(1);
 
@@ -428,7 +444,6 @@ int main() {
 	// Make model matrices and send them over
 	unsigned int models;
 	models = glGetUniformLocation(program, "models");
-	//glUniformMatrix4fv(models, models_.size(), GL_FALSE, glm::value_ptr(models_[0]));
 
 
 
@@ -489,9 +504,11 @@ int main() {
 		* 
 		*/
 
+		// Run the loop function here
 		for (Component* c : components) {
 			if (c->loop != NULL) {
 				c->loop(c);
+				c->updateModelMatrix();
 			}
 		}
 
