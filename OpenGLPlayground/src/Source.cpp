@@ -34,13 +34,6 @@ struct Model {
 	void add(Component* m) {
 		components.push_back(m);
 	}
-
-	void draw() {
-		for (Component* c : components) {
-			
-			c->draw();
-		}
-	}
 };
 
 struct Node {
@@ -261,17 +254,17 @@ int main() {
 	glm::vec3 z = glm::cross(x, y);
 
 	// Create components for each axis
-	Component axisX(&mesh1, &m1, x, { 0,0,0 }, { 10,.0125,.0125 });
-	Component axisY(&mesh1, &m1, y, { 0,0,0 }, { .0125,10,.0125 });
-	Component axisZ(&mesh1, &m1, z, { 0,0,0 }, { .0125,.0125,10 });
+	Component axisX(&mesh1, &m1, x, { 0,0,0 }, { 10,.0125,.0125 }, NULL, NULL);
+	Component axisY(&mesh1, &m1, y, { 0,0,0 }, { .0125,10,.0125 }, NULL, NULL);
+	Component axisZ(&mesh1, &m1, z, { 0,0,0 }, { .0125,.0125,10 }, NULL, NULL);
 
 
 
 
-	Component p1(&mesh1, &m1, {5,5,5}, { 45,0,60 }, { 2,1,1 });
-	Component p2(&mesh2, &m2, { 4,4,4 }, { 0,0,34 }, { 1,2,4 });
-	Component p3(&mesh3, &m2, { -4,4,4 }, { -54,0,34 }, { 9,2,4 });
-	Component p4(&mesh1, &m3, { 0,10,0 }, { 0,0,0 }, { 1,1,1 });
+	Component p1(&mesh1, &m1, {5,5,5}, { 45,0,60 }, { 2,1,1 }, ComponentInit1, ComponentLoop1);
+	Component p2(&mesh2, &m2, { 4,4,4 }, { 0,0,34 }, { 1,2,4 }, ComponentInit1, ComponentLoop1);
+	Component p3(&mesh3, &m2, { -4,4,4 }, { -54,0,34 }, { 9,2,4 }, NULL, NULL);
+	Component p4(&mesh1, &m3, { 0,10,0 }, { 0,0,0 }, { 1,1,1 }, ComponentInit2, ComponentLoop2);
 
 
 
@@ -291,14 +284,14 @@ int main() {
 	bb.add(&p3);
 
 
-	Component a(&mesh1, &m4, glm::vec3(bb.minX, bb.minY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
-	Component b(&mesh1, &m4, glm::vec3(bb.minX, bb.maxY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
-	Component c(&mesh1, &m4, glm::vec3(bb.maxX, bb.maxY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
-	Component d(&mesh1, &m4, glm::vec3(bb.maxX, bb.minY, bb.minZ), { 0,0,0 }, { .25,.25,.25 });
-	Component e(&mesh1, &m4, glm::vec3(bb.minX, bb.minY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
-	Component f(&mesh1, &m4, glm::vec3(bb.minX, bb.maxY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
-	Component g(&mesh1, &m4, glm::vec3(bb.maxX, bb.maxY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
-	Component h(&mesh1, &m4, glm::vec3(bb.maxX, bb.minY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 });
+	Component a(&mesh1, &m4, glm::vec3(bb.minX, bb.minY, bb.minZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
+	Component b(&mesh1, &m4, glm::vec3(bb.minX, bb.maxY, bb.minZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
+	Component c(&mesh1, &m4, glm::vec3(bb.maxX, bb.maxY, bb.minZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
+	Component d(&mesh1, &m4, glm::vec3(bb.maxX, bb.minY, bb.minZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
+	Component e(&mesh1, &m4, glm::vec3(bb.minX, bb.minY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
+	Component f(&mesh1, &m4, glm::vec3(bb.minX, bb.maxY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
+	Component g(&mesh1, &m4, glm::vec3(bb.maxX, bb.maxY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
+	Component h(&mesh1, &m4, glm::vec3(bb.maxX, bb.minY, bb.maxZ), { 0,0,0 }, { .25,.25,.25 }, NULL, NULL);
 
 
 
@@ -315,12 +308,6 @@ int main() {
 	model1.add(&p1);
 
 
-	// set script functions
-	p1.init = ComponentInit1;
-	p1.loop = ComponentLoop1;
-
-	p4.init = ComponentInit2;
-	p4.loop = ComponentLoop2;
 	
 	//exit(1);
 
@@ -381,18 +368,8 @@ int main() {
 	*/
 
 
+	// Generate the batched mesh
 	BatchedMesh* bm = genBatchedMesh({&mesh1, &mesh2, &mesh3});
-
-
-	std::vector<GLsizei> count_;
-	count_.push_back(mesh1.inds->size());
-	
-	std::vector<GLvoid*> start_;
-	start_.push_back((GLvoid*)(*(bm->indexMeshMap))[&mesh1]);
-
-	std::vector<glm::mat4> models__;
-	models__.push_back(glm::translate(glm::mat4(1), glm::vec3(0, 10, 0)));
-
 
 
 
@@ -406,32 +383,12 @@ int main() {
 	* vector. Then we can draw each material easily
 	*/
 
-
-	for (Component* c : m1.components) {
-		m1.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
-		m1.counts.push_back(c->mesh->inds->size());
-		m1.models.push_back(c->model);
-	}
-
-	for (Component* c : m2.components) {
-		m2.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
-
-		m2.counts.push_back(c->mesh->inds->size());
-		m2.models.push_back(c->model);
-	}
-
-	for (Component* c : m3.components) {
-		m3.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
-
-		m3.counts.push_back(c->mesh->inds->size());
-		m3.models.push_back(c->model);
-	}
-
-	for (Component* c : m4.components) {
-		m4.starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
-
-		m4.counts.push_back(c->mesh->inds->size());
-		m4.models.push_back(c->model);
+	for (Material* m : materials) {
+		for (Component* c : m->components) {
+			m->starts.push_back((GLvoid*)(*(bm->indexMeshMap))[c->mesh]);
+			m->counts.push_back(c->mesh->inds->size());
+			m->models.push_back(c->model);
+		}
 	}
 
 

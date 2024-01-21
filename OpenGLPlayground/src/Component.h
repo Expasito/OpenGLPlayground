@@ -16,7 +16,7 @@ public:
 	glm::vec3 scalate;
 	glm::mat4 model;
 
-	Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate);
+	Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate, void(*init)(Component*), void(*loop)(Component*));
 
 	void updateModelMatrix();
 

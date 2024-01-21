@@ -1,6 +1,6 @@
 #include "Component.h"
 
-Component::Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate) {
+Component::Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::vec3 rotate, glm::vec3 scalate, void(*init_)(Component*), void(*loop_)(Component*)) {
 	this->mesh = mesh;
 	this->material = material;
 	this->translate = translate;
@@ -14,6 +14,9 @@ Component::Component(Mesh* mesh, Material* material, glm::vec3 translate, glm::v
 
 	// init the memory for the component
 	this->memory = new ComponentMemory;
+
+	init = init_;
+	loop = loop_;
 };
 
 void Component::updateModelMatrix() {
